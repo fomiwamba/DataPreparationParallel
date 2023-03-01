@@ -1,0 +1,192 @@
+sequenz imc_logging "update_configuration started"
+
+_index = DlgGetSelectedItem("Window")
+_window = DlgGetItemText("Window",_index);Ch_Config:windowfft[1])
+
+wenn txwo(_window,"Rechteck") <> 0
+	_window_ = 0
+ende
+wenn txwo(_window,"Hanning") <> 0
+	_window_ = 2
+ende
+wenn txwo(_window,"Flat Top") <> 0
+	_window_ = 5
+ende
+_window = _window_
+entf _window_
+
+;DlgSelectItem("Average",_index)
+;_average = _index
+_index = DlgGetSelectedItem("Average")
+_average = DlgGetItemText("Average",_index);Ch_Config:windowfft[1])
+
+wenn txwo(_average,"None") <> 0
+	_average_ = 0
+ende
+wenn txwo(_average,"Linear") <> 0
+	_average_= 1
+ende
+wenn txwo(_average,"PeakHold") <> 0
+	_average_ = 2
+ende
+_average = _average_
+
+
+_index = DlgGetSelectedItem("Overlap")
+_overlap = DlgGetItemText("Overlap",_index);Ch_Config:overlap[1])
+_overlap = tzuew(_overlap,"f")
+
+_twindow = DlgGetValue("DeltaT")
+
+_PulsPerRev = DlgGetValue("PulsPerRev")
+_Triglevel = DlgGetValue("TrigLevel")
+
+_SampPerRev = DlgGetValue("SpR")
+_Omax = _SampPerRev/2
+DlgSetValue("Omax",_Omax)
+
+
+_number_of_samples_total = lang?(Feature:channelx)
+_dt = xdel?(Feature:channelx)
+_fs = 1/_dt
+_signal_time_length = _number_of_samples_total*_dt
+_number_samples_per_window = _twindow/_dt
+_Length = _number_samples_per_window
+_windowlength = _Length 
+DlgSetValue("Length",_Length)
+
+_pam = _Length/_SampPerRev;tzuew(Ch_Config:rev_per_windowlength[1],"f")
+DlgSetValue("NoR",_pam)
+_dO = 1/_pam
+DlgSetValue("DeltaO",_dO)
+
+_averages = ganz((_number_of_samples_total-_overlap/100*_number_samples_per_window)/(_number_samples_per_window-_overlap/100*_number_samples_per_window));
+wenn _averages < 0
+	BoxNachricht("Configuration error","Please reduce the block size (Length)","?1")
+ende
+_deltat = _number_samples_per_window*_dt
+_deltaf = 1/_deltat
+DlgSetValue("Fs",_fs)
+DlgSetValue("N",_number_of_samples_total)
+DlgSetValue("T",_signal_time_length)
+DlgSetValue("Averages",_averages)
+DlgSetValue("DeltaT",_deltat)
+DlgSetValue("DeltaF",_deltaf)
+wenn Tachochannel <> -1
+	_index = GrKanalFinde(Feature,"Channelpuls")
+	wenn _index > 0
+		sequenz SignaleGleichSetzen Feature:ChannelX Feature:Channelpuls
+		_vibsignal = _sig1
+		_pulssignal = _sig2
+		;_peak_1 = _pulssignal - _TrigLevel 
+		_peak = STri(_pulssignal,_TrigLevel,_TrigLevel)
+		OtrTachoMode(3, 0, _PulsPerRev, 0)
+		_rs = OtrResample(_vibsignal,_peak,_Omax ,1)
+		_Tgesamt = ganz(lang?(_rs))
+		_T_fenster = _pam*_SampPerRev
+		_nn_mit_overlap = ganz((_Tgesamt-_overlap/100*_T_fenster)/(_T_fenster-_overlap/100*_T_fenster)); Anzahl der Iteration
+		DlgSetValue("NoA",_nn_mit_overlap)
+	ende
+ende
+
+_BPFu = DlgGetValue("BPFu")
+_BPFo = DlgGetValue("BPFo")
+_TPF = DlgGetValue("TPF")
+;_EnvTyp = DlgGetValue("EnvTyp")
+_index = DlgGetSelectedItem("EnvType")
+_EnvType = _index
+
+_index = DlgGetSelectedItem("RotDir")
+wenn _index = 1
+	_Fall_xy = 1; "X-Y"
+sonst
+	_Fall_xy = 2; "Y-X"
+ende
+
+
+;finde und setze channely_orbit
+_ind_channely_orbit = Ch_Config:OrbitChannelY[_kk_config]
+wenn _ind_channely_orbit = "None"
+	ChannelYName_orbit  = Ch_Config:SigName[_kkk]
+	Feature:ChannelY_orbit = Data_Channel:{<ChannelXName>}
+	_kky = _kkk
+sonst
+	_kky = tzuew(tteil(_ind_channely_orbit,3,5),"f")+1	
+	sequenz search_item Ch_Config:ChName _ind_channely_orbit; search_index -> search the configuration of the channely of current channel in the xlsconfig file
+	ChannelYName_orbit  = Ch_Config:SigName[search_index]
+	_kky =GrKanalFinde(Data_Channel,ChannelYName_orbit)
+	Feature:ChannelY_orbit  = Data_Channel:[_kky]
+ende
+Feature:ChannelY = Feature:ChannelY_orbit
+ChannelYName = ChannelYName_orbit
+
+
+; finde und setze channelpuls
+ind_channelPuls = Ch_Config:TachoChannel[_kkk]
+wenn ind_channelPuls <> "None"
+	sequenz search_item Ch_Config:ChName ind_channelPuls ; search_index -> search the configuration of the current channel in the xlsconfig file
+	_kkpuls = search_index ; tzuew(tteil(ind_channelpuls,3,5),"f")+1	
+	;_kkpuls = tzuew(tteil(ind_channelpuls,3,5),"f")+1	; k�nnte fehleranf�llig sein
+	_parname_channelPuls = Ch_Config:SigName[_kkpuls]
+	DlgSetText("NameTachoChannel",_parname_channelPuls)
+	_kpuls =GrKanalFinde(Data_Channel,_parname_channelPuls)
+	{<_parname_channelPuls>} = Data_Channel:[_kpuls]
+	DlgInsertItem("ChannelPuls",1, _parname_channelPuls , 0)
+	Feature:ChannelPuls  = {<_parname_channelPuls>}
+	ChannelPuls = {<_parname_channelPuls>}
+	_channelpulsidx = DlgFindItem("ChannelPuls", _parname_channelPuls)
+	DlgSelectItem("ChannelPuls", _channelpulsidx)
+	TachoChannelNameIst = _parname_channelPuls
+sonst
+	DlgInsertItem("ChannelPuls",1, "None" , 0)
+	_channelpulsidx = DlgFindItem("ChannelPuls","None")
+	DlgSelectItem("ChannelPuls", 1)
+	TachoChannelNameIst = "None"
+end
+
+; FUER SUES MIT MEHREREN CORRELATIONS-FRF CHY
+if 1
+	_channely = Ch_Config:FRFChannelY[_kkk]; -> Chxxx
+	wenn _channely = "None"
+		ChannelYName_frf = Ch_Config:SigName[_kkk]
+		Feature:ChannelY_frf = Data_Channel:{<ChannelYName_frf>};[_kkk]
+		_kky = _kkk
+		ChannelYName = ChannelYName_frf
+	sonst
+		FRF_ChY_List = TxArrayCreate(0)
+		FRF_ChY_idx_list = leer
+		_frf_chy_list = TxSplit(_channely,"#")
+		_frf_chy_len = TxArrayGetSize(_frf_chy_list)
+		for _frf_i = 1 to _frf_chy_len
+			_frf_chy_i = _frf_chy_list[_frf_i]
+			_frf_chy_idx = tzuew(tteil(_frf_chy_i,3,5),"f")+1	
+			FRF_ChY_idx_list = binde(FRF_ChY_idx_list, _frf_chy_idx)	
+			; _kky = tzuew(tteil(_channely,3,5),"f")+1	
+			sequenz search_item Ch_Config:ChName _frf_chy_i; search_index -> search the configuration of the channely of current channel in the xlsconfig file
+			ChannelYName_frf = Ch_Config:SigName[search_index]
+			FRF_ChY_List[_frf_i] = ChannelYName_frf
+			_kky =GrKanalFinde(Data_Channel,ChannelYName_frf)
+			Feature:{<ChannelYName_frf>} = Data_Channel:[_kky]
+
+		ende
+		ChannelYName_frf = FRF_ChY_List
+	ende
+else
+	
+	;finde und setze channely_frf
+	_ind_channely_frf = Ch_Config:FRFChannelY[_kk_config]
+	wenn _ind_channely_frf = "None"
+		ChannelYName_frf  = Ch_Config:SigName[_kkk]
+		Feature:ChannelY_frf = Data_Channel:{<ChannelXName>}
+		_kky = _kkk
+	sonst
+		_kky = tzuew(tteil(_ind_channely_frf,3,5),"f")+1	
+		sequenz search_item Ch_Config:ChName _ind_channely_frf; search_index -> search the configuration of the channely of current channel in the xlsconfig file
+		ChannelYName_frf  = Ch_Config:SigName[search_index]
+		_kky =GrKanalFinde(Data_Channel,ChannelYName_frf)
+		Feature:ChannelY_frf   = Data_Channel:[_kky]
+		Feature:ChannelY = Feature:ChannelY_frf
+		ChannelYName = ChannelYName_frf
+	ende
+
+ende

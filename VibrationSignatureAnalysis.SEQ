@@ -1,0 +1,148 @@
+sequenz imc_logging "vibration_signature_analysis_td started"
+
+;Feature:ChannelX = G208
+dt_sig = XDel?(Feature:ChannelX)
+n_sig = Leng?(Feature:ChannelX)
+t0_sig = time?(Feature:ChannelX)
+t0_sig_txt = zeitintext(t0_sig, 3)
+time_vec =rampe(t0_sig,dt_sig,n_sig)
+SetTime(Feature:ChannelX,0)
+
+
+;Length = 20/dt_sig
+;Window = 2
+;Overlap = 0
+
+_twindow = Length * dt_sig
+Feature:DateTime = mvmean(time_vec, _twindow,_twindow)
+SetTime(Feature:DateTime,0)
+
+_deltaf = 1/_twindow
+_Tgesamt = n_sig*dt_sig
+wenn _twindow > _Tgesamt
+	_twindow = _Tgesamt
+ende
+Fs = 1/dt_sig
+Fmax = Fs/2
+n_fft = ganz((_Tgesamt-overlap/100*_twindow)/(_twindow-overlap/100*_twindow)); Anzahl der Iterationen mit Overlap-Fkt
+
+	
+wenn Length > 0 and Window > 0 and Overlap >= 0  and timeanalysis = "ON"
+	
+	; Resampling Zeit und Pulssignal
+	step_ = "time analysis"
+	if PA1 = 1
+		DlgSetText("Step",step_)
+	ende
+
+	
+	Feature:x_mv = mvmean(Feature:ChannelX, _twindow,_twindow)
+	Feature:x_max = mvmax(Feature:ChannelX, _twindow,_twindow)
+	Feature:x_peak = mvmax(abs(Feature:ChannelX), _twindow,_twindow)
+	Feature:x_min = mvmin(Feature:ChannelX, _twindow,_twindow)
+	Feature:x_eff = mvrms(Feature:ChannelX, _twindow,_twindow)
+	Feature:x_std = mvstdev(Feature:ChannelX, _twindow,_twindow)
+	Feature:x_p2p = Feature:x_max - Feature:x_min
+	Feature:x_crest = Feature:x_p2p/(2*Feature:x_std)
+
+	
+	_WatchVarName_ = tadd(ChannelXName,"_mean")			
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_mv)
+	SetTime(ViSA_Parameter_Trend:{<_WatchVarName_>},0)
+	;ViSA_Parameter_Trend:{<_WatchVarName_>} = Feature:x_mv
+	_WatchVarName_ = tadd(ChannelXName,"_max")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_max)
+	;ViSA_Parameter_Trend:{<_WatchVarName_>} = Feature:x_max
+	_WatchVarName_ = tadd(ChannelXName,"_min")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_min)
+	;ViSA_Parameter_Trend:{<_WatchVarName_>} = Feature:x_min
+	_WatchVarName_ = tadd(ChannelXName,"_peak")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_peak)
+	;ViSA_Parameter_Trend:{<_WatchVarName_>} = Feature:x_peak
+	_WatchVarName_ = tadd(ChannelXName,"_peak2peak")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_p2p)
+	;ViSA_Parameter_Trend:{<_WatchVarName_>} = Feature:x_p2p
+	_WatchVarName_ = tadd(ChannelXName,"_crest")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_crest)
+	;ViSA_Parameter_Trend:{<_WatchVarName_>} = Feature:x_crest
+	_WatchVarName_ = tadd(ChannelXName,"_eff")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_eff)
+	;ViSA_Parameter_Trend:{<_WatchVarName_>} = Feature:x_eff
+	_WatchVarName_ = tadd(ChannelXName,"_std")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_std)
+	;ViSA_Parameter_Trend:{<_WatchVarName_>} = Feature:x_std
+end
+
+wenn Length > 0 and Window >= 0 and Overlap >= 0 and fftanalysis = "ON"
+	if PA1 = 1
+		step_ = "fft analysis"
+		DlgSetText("Step",step_)
+	ende
+
+	; search window_length = 2^n
+	if 0
+		for i = 12 to 20
+			_windowlength_ = 2^i
+			if _windowlength_ > length
+				;_windowlength_ = 2^(i+1)
+				_dt_sig = _Tgesamt/(n_fft*_windowlength_)
+				break
+			ende
+		ende
+		t_new =  ramp(0,_dt_sig,n_fft*_windowlength_)
+		Feature:ChannelXres = RSamp(Feature:ChannelX,t_new)
+		_Ax_kaskx= AmpSpectrumRMS(Feature:ChannelXres,_windowlength_,window,overlap,1,0)
+	else
+		_Ax_kask	= AmpSpectrumRMS(Feature:ChannelX,length,window,overlap,1,0)
+	ende
+	
+	_ijk_max = leng?(_Ax_kask)/seglen?( _Ax_kask)
+	for _ijk = 1 to _ijk_max
+		_Ttrig = Feature:DateTime[_ijk]
+		_Ax_ijk = _Ax_kask:[_ijk]
+		_unit = einheit?(_Ax_kask,1)
+		seteinheit(_Ax_ijk,_unit,1)
+		wenn _ijk = 1				
+			_Ax_event = EventNew(_Ax_ijk,0)
+		ende
+		wenn _ijk > 1
+			EventAppend(_Ax_event,_Ax_ijk,0)
+		ende					
+		_eventnr = EventNum?(_Ax_event)		
+		EventProp(_Ax_event,_eventnr,0,_Ttrig)
+	end
+	Feature:Ax = _Ax_event
+	
+	_WatchVarName_ = tadd(ChannelXName,"_fft_mag")			
+	ViSA_Matrix:{<_WatchVarName_>} = Feature:Ax		
+	
+	wfft = window
+	sequenz FreqEnergieSchnitt_FFT _Ax_kask 0 Fmax "FFTE_All"
+	sequenz FreqEnergieSchnitt_FFT _Ax_kask 0 10 "FFTE_LF"
+	sequenz FreqEnergieSchnitt_FFT _Ax_kask 10 1000 "FFTE_ISO"
+	wenn Fmax > 1000
+		sequenz FreqEnergieSchnitt_FFT _Ax_kask 1000 Fmax "FFTE_HF"
+	end
+		
+		
+	_WatchVarName_ = tadd(ChannelXName,"_All")			
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTE_All)
+	_WatchVarName_ = tadd(ChannelXName,"_LF")			
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTE_LF)
+	_WatchVarName_ = tadd(ChannelXName,"_ISO")			
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTE_ISO)
+	wenn Fmax > 1000
+		_WatchVarName_ = tadd(ChannelXName,"_HF")			
+		ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTE_HF)
+	end
+end
+
+
+if PA1 = 1
+	sequenz UpdateDataList
+ende
+
+
+
+
+

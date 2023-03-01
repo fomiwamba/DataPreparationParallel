@@ -1,0 +1,35 @@
+sequenz imc_logging "filter_file_to_analyse started"
+
+
+_filelist_mm = FsFileListNew(pathname, searchname, 0, 1, 2)
+IstFileList = TxArrayCreate(0)
+wenn _filelist_mm > 0
+	_cntfile = FsFileListGetCount(_filelist_mm)
+	_mm = 1
+	_counter = 0
+	SOLANGE _mm <= _cntfile
+		_filename = FsFileListGetName(_filelist_mm, _mm)
+		;_filesize = FsGetFileSize(_filename_mm)
+		;_filenamelength = tlang(_filename_mm)
+		
+		sequenz filename2filedate
+
+		_datumFrom = PnGetValue("Datefrom")
+		_datumTo = PnGetValue("Dateto")
+		wenn _Messdatum_zahl >= _DatumFrom and _Messdatum_zahl <= _DatumTo
+			_counter = _counter + 1
+			IstFileList[_counter] = _filename        ;FsSplitPath(_filename,4)
+		else
+		    ;remove from list
+		    sequenz Delete_Item "Filelist" _filename_mm
+		ENDE
+		_mm = _mm + 1
+	ende
+	_mm_max = _counter;_cntfile
+	PnSetText("Files",tform(_mm_max,"f1.0"))
+	FsFileListClose(_filelist_mm)
+sonst
+	_err = FsGetLastError() 
+	zeigen _err
+ende
+

@@ -1,0 +1,27 @@
+sequenz imc_logging "load_file_from_input_folder started"
+
+_PathName = input_verz
+_suchname = "*.dat"
+
+_filelist_mm = FsFileListNew(_pathname, _suchname, 0, 1, 2)
+
+wenn _filelist_mm > 0
+	cntfile = FsFileListGetCount(_filelist_mm)
+	wenn cntfile> 0
+		_mm = 1
+		SOLANGE _mm <= cntfile
+			_filename = FsFileListGetName(_filelist_mm, _mm)
+			sequenz Insert_Item "Filelist" _filename
+			_mm = _mm + 1
+		end
+		_filename = DlgGetItemText("Filelist", 1)
+		_filesize = FsGetFileSize(_filename)
+		_filenamelength = tlang(_filename)
+
+		;sequenz LoadDatFile	
+	ende
+	FsFileListClose(_filelist_mm)
+sonst
+	_err = FsGetLastError() 
+	zeigen _err
+ende

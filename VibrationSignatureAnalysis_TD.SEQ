@@ -1,0 +1,151 @@
+sequenz imc_logging "vibration_signature_analysis_td started"
+
+
+; Identify T0 (Trigger Time)
+DateTime_Wert = Zeit?(Data_Channel:[1]); + xoff?(Data_Channel:[1]); sonst gibt es probleme bei nichtzeitsynchronisierten Signalen
+wenn Length > 0 and Window > 0 and Overlap >= 0 and Average >= 0 and PulsPerRev > 0 and timeanalysis = "ON"
+	
+	; Resampling Zeit und Pulssignal
+	step_ = "time analysis"
+	if PA1 = 1
+		PnSetText("Step",step_)
+	ende
+	
+	wenn varexist?("Feature:channelpuls"); Tachochannel <> -1
+		sequenz Time_Analysis Feature:ChannelX Feature:ChannelPuls length overlap window Feature:ChannelX	
+		Feature:DateTime = DateTime_Wert + Feature:Tmittel_zk
+	sonst
+		sequenz Time_Analysis Feature:ChannelX 0 length overlap window Feature:ChannelX
+		Feature:DateTime = DateTime_Wert + Feature:Tmittel_zk
+	ende
+	a1 = DateTime_Wert
+	a2 = Feature:Tmittel_zk
+	a3 = a1 + a2
+	_WatchVarName_ = tadd(ChannelXName,"_mean")			
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_mv)
+	_WatchVarName_ = tadd(ChannelXName,"_max")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_max)
+	_WatchVarName_ = tadd(ChannelXName,"_min")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_min)
+	_WatchVarName_ = tadd(ChannelXName,"_peak")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_peak)
+	_WatchVarName_ = tadd(ChannelXName,"_P2P")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_peak2peak)
+	_WatchVarName_ = tadd(ChannelXName,"_crest")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_crest)
+	;_WatchVarName_ = tadd(ChannelXName,"_eff")	
+	;ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_eff)
+	_WatchVarName_ = tadd(ChannelXName,"_std")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_std)
+	_WatchVarName_ = tadd(ChannelXName,"_kurtosis")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_kurtosis)
+	_WatchVarName_ = tadd(ChannelXName,"_skewness")	
+	ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_skewness); skewness
+		
+	wenn store_int_metrics
+		_WatchVarName_ = tadd(ChannelXName,"_irms")	
+		ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_irms)
+		_WatchVarName_ = tadd(ChannelXName,"_imean")	
+		ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_imean)
+		_WatchVarName_ = tadd(ChannelXName,"_ipeak")	
+		ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_ipeak)
+		_WatchVarName_ = tadd(ChannelXName,"_iP2P")	
+		ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x_ipeak2peak)
+	ende
+		
+	if file_monitoring = 0 ; ->diagnosis
+		_WatchVarName_ = tadd(ChannelXName,"_iqr")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_iqr); 		Feature:x_iqr = _x_iqr; Interquantile = x_075 - x_025
+		_WatchVarName_ = tadd(ChannelXName,"_median")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_median);Feature:x_median = _x_median; median or 50% quantile
+		_WatchVarName_ = tadd(ChannelXName,"_lower")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_lower); 		Feature:x_iqr = _x_iqr; Interquantile = x_075 - x_025
+		_WatchVarName_ = tadd(ChannelXName,"_upper")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_upper);Feature:x_median = _x_median; median or 50% quantile
+		_WatchVarName_ = tadd(ChannelXName,"_q25")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_025); 		Feature:x_iqr = _x_iqr; Interquantile = x_075 - x_025
+		_WatchVarName_ = tadd(ChannelXName,"_q75")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_075);Feature:x_median = _x_median; median or 50% quantile
+				
+		_WatchVarName_ = tadd(ChannelXName,"_outliers")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_outliers);Feature:x_outliers = _x_outliers; # of outliers eature:x_nconts = _x_nconst
+		_WatchVarName_ = tadd(ChannelXName,"_nconsts")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_nconsts);Feature:x_nconts = _x_outliers; # of outliers
+		_WatchVarName_ = tadd(ChannelXName,"_histarea")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_histo_area);Feature:x_nconts = _x_outliers; # of outliers
+		_WatchVarName_ = tadd(ChannelXName,"_iqrlowup")
+		ViSA_Parameter_Trend:{<_WatchVarName_>} =	xyvon(Feature:DateTime,Feature:x_lowup);Feature:x_nconts = _x_outliers; # of outliers
+		
+		_WatchVarName_ = tadd(ChannelXName,"_hist")	
+		ViSA_Matrix:{<_WatchVarName_>} = Feature:histo_event 
+		
+	end
+		
+ende
+
+; Orbit Analysis
+if 0
+	wenn Length > 0 and Window > 0 and Overlap >= 0 and Average >= 0 and PulsPerRev > 0 and orbitanalysis = "ON"
+		if PA1 = 1
+			step_ = "orbit analysis"
+			PnSetText("Step",step_)
+		ende
+	
+		if tverg(channelXName,ChannelYName_orbit) <> 0
+
+			wenn varexist?("Feature:channelpuls"); and Tachochannel <> -1
+				sequenz Orbit_analysis Feature:ChannelX Feature:ChannelY_orbit	 Feature:ChannelPuls length overlap window Fall_xy
+				_WatchVarName_ = tadd(ChannelXName,"_Orbit_Speed")			
+				ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:drehzahl)
+			sonst
+				sequenz Orbit_analysis Feature:ChannelX Feature:ChannelY_orbit	 0 length overlap window Fall_xy
+			ende
+			; Gruppierung der Feature zur Trendbildung
+			;	_WatchVarName_ = tadd(ChannelXName,"_Orbit_P_Time")			
+			;	ViSA_Parameter_Trend:{<_WatchVarName_>} = Feature:Tmittel
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_x0")		
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:x0)
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_y0")
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:y0)
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_S0")
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:S0)
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_phi0")
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:phi0)
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_xm")	
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:xm)
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_ym")
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:ym)
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_Sm")
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:Sm)
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_phim")
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:phim)
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_Sgmax")
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:Sgmax)
+			_WatchVarName_ = tadd(ChannelXName,"_Orbit_Phigmax") 
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:Phigmax)
+	
+			;	_WatchVarName_ = tadd(ChannelXName,"_Orbit_Basp")	
+			;	ViSA_Matrix:{<_WatchVarName_>} = Feature:Basp 
+			;	_WatchVarName_ = tadd(ChannelXName,"_Orbit_Bpsp")	
+			;	ViSA_Matrix:{<_WatchVarName_>} = Feature:Bpsp	
+			;	_WatchVarName_ = tadd(ChannelXName,"_Orbit_G")	
+			;	ViSA_Matrix:{<_WatchVarName_>} = Feature:G	
+			;	_WatchVarName_ = tadd(ChannelXName,"_Orbit_K")	
+			;	ViSA_Matrix:{<_WatchVarName_>} = Feature:K	
+			;	_WatchVarName_ = tadd(ChannelXName,"_Orbit_phimax")	
+			;	ViSA_Matrix:{<_WatchVarName_>} = Feature:phimax	
+			;	_WatchVarName_ = tadd(ChannelXName,"_Orbit_Orbitindikator")	
+			;	ViSA_Matrix:{<_WatchVarName_>} = Feature:Orbitindikator	
+	
+		ende
+	ende
+ende
+
+if PA1 = 1
+	sequenz UpdateDataList
+ende
+
+
+
+
+

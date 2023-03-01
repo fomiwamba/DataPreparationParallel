@@ -1,0 +1,469 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;	Sequenz zur Berechnung von statistischen Kenngrößen aus dem Rohsignal
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sequenz imc_logging "time_analysis started"
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Inputs
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_signalx = PA1; Gehäuse oder Wellenbahnsignal in X-Richtung
+_peak = 	PA2; Bezugsmarken Signal
+_windowlength = PA3;
+_overlap = PA4;:overlap; Überlappung
+_windowfft = PA5;:windowfft
+_int_signalx = PA6;
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Vorbereitung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+_unit_signalx = einheit?(_signalx,1)
+_unit_int_signalx = einheit?(_int_signalx,1)
+
+xOFFSET _signalx 0
+xoffset _peak 0
+xoffset _int_signalx 0
+
+wenn lang?(_peak)>2
+	sequenz SignaleGleichSetzen _signalx _peak
+	_signalx = _sig1
+	_peak = _sig2
+ende
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Rechenteil
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_T_fenster = _windowlength*xdel?(_signalx); Fensterbreite
+_deltaf = 1/_T_fenster; Abtastzeit
+_Fs = 1/xdel?(_signalx); Abtastfrequenz
+_Tgesamt = lang?(_signalx)*xdel?(_signalx); Gesamte Messdauer
+wenn _T_fenster > _Tgesamt
+	_T_fenster = _Tgesamt
+ende
+_anzahl_it_mit_overlap = ganz((_Tgesamt-_overlap/100*_T_fenster)/(_T_fenster-_overlap/100*_T_fenster)); Anzahl der Iterationen mit Overlap-Fkt
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Zu berechnenden Zeitkennwerte
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;_histo_sig = histo(_signalx, (max(_signalx)-min(_signalx))/50, 50)
+_drehzahl_kask = leer; Drehzahl 
+_x_mv_kask = leer; Mittelwert
+_x_eff_a_kask = leer; Effektivwert Beschleunigung
+_x_eff_v_kask = leer; Effektivwert Geschwindigkeit
+_x_max_kask = leer; Maximumwert
+_x_min_kask = leer; Minimumwert
+_x_peak_kask = leer; Betragspitzenwert
+_x_peak2peak_kask = leer; Betragspitzenwert
+_x_crest_kask = leer; Crestfaktor
+_x_std_kask = leer; Standardabweichung
+_x_kurtosis_kask = leer; Kurtosis
+_x_histo_sig = leer;
+_Tmittel_kask = leer;
+_x_eff_kask = leer
+_x_eff_a_kask = leer;
+_x_eff_a_lf_kask = leer;
+_x_eff_a_iso_kask = leer;
+_x_eff_a_hf_kask = leer;
+_x_eff_v_kask = leer;
+_x_eff_v_lf_kask = leer;
+_x_eff_v_iso_kask = leer;
+_x_eff_v_hf_kask = leer;
+_x_histo_area_kask = leer;
+_x_average_rec_kask = leer; = sum(abs(_x_g))/lang?(_x_g); average rectified
+_x_skewness_kask = leer; = 1/lang?(_x_g)*summe(_x_ac^3)/_x_std^3; skewness
+_x_clf_kask = leer; = max(abs(_x_g))/_x_average_rec^2; clearance
+_x_if_kask = leer; = max(abs(_x_g))/_x_average_rec^2; Impulse factor
+_x_ff_kask = leer; = _x_eff_a/_x_average_rec; Impulse factor
+
+_x_irms_kask = leer
+_x_ipeak_kask = leer
+_x_imean_kask = leer
+_x_ipeak2peak_kask = leer
+
+_x_iqr = leer; Interquartile oder quartilabstand
+_x_median = leer; Median -> x050 or q2
+_x_025 = leer; LowerQuartile -> Boxplot Quartil -> q1
+_x_075 = leer; UpperQuartile -> Boxplot Quartil -> q3
+_x_lower = leer;
+_x_upper = leer;
+_x_range = leer;
+_x_outliers = leer
+_x_nconst = leer
+
+_nn = 1;
+SOLANGE _nn <= _anzahl_it_mit_overlap 
+	; Overlap theorie
+	;Tgesamt = _windowlength*Tfenster - (_windowlength-1)*Overlap*Tfenster
+	;Tbeginn = i*Tfenster - (i-1)*Overlap*Tfenster - Tfenster
+	;Tende = i*Tfenster - (i-1)*Overlap*Tfenster 
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;1) Zeitfenster Selektion
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if 1
+		_Tbeginn = (_nn-1)*_T_fenster-(_nn-1)*_overlap/100*_T_fenster
+		_Tende = _nn*_T_fenster-(_nn-1)*_overlap/100*_T_fenster;Tbeginn + T_fenster
+		_T_fenster_verifikation = _Tende-_Tbeginn
+		_N_beginn = floor(((_nn-1)-(_nn-1)*_overlap/100)*_windowlength);
+		_N_end = floor((_nn-(_nn-1)*_overlap/100)*_windowlength)-1
+		_Tmittel = (_Tende+_Tbeginn)/2
+		_Tmittel_kask = binde(_Tmittel_kask,_Tmittel)
+	
+		wenn _nn = 1
+			_x_g = grenindex(_signalx,(_nn-1)*_windowlength+1,_nn*_windowlength)
+			wenn lang?(_peak)>2
+				_peak_g = grenindex(_peak,(_nn-1)*_windowlength+1,_nn*_windowlength)
+			ende
+			_x_g_int = grenindex(_int_signalx,(_nn-1)*_windowlength+1,_nn*_windowlength)
+		sonst
+			_x_g = grenindex(_signalx,_N_beginn,_N_end)
+			wenn lang?(_peak)>2
+				_peak_g = grenindex(_peak,_N_beginn,_N_end)
+			ende
+			_x_g_int = grenindex(_int_signalx,_N_beginn,_N_end)
+		ende
+	ende
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;2) Drehzahl und Drehfrequenzbestimmung -> F0, Drehzahl
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	wenn lang?(_peak)>2
+		_dp = diff(_peak_g)*xdel?(_peak_g)
+		_Tx = posiex(_dp,2); findet alle Zeiten, wo peak <= 0
+		_anz_peak = lang?(_Tx)
+		entf _dp
+		entf _Tx	
+		_Var = 2
+		sequenz Pulse2Speed _peak_g TrigLevel PulsPerRev 2
+		
+		_drehzahl_kask = binde(_drehzahl_kask,_drehzahl_mitte)
+	ende
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; BoxPlot
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if file_monitoring = 0 ; ->diagnose
+		_x = sort(_x_g,1)
+		n = lang?(_x)
+		a1 = n*0.25
+		a2 = n*0.75
+		a3 = n*0.5
+		b1 = mod(n,4)
+		b2 = mod(n,4)
+		b3 = mod(n,2)
+	
+		wenn b1 = 0
+			_x025 = 0.5*(_x[a1]+_x[a1+1]); wenn a 
+		sonst
+			_x025 = 0.5*_x[a1+1]
+		end
+		wenn b2 = 0
+			_x075 = 0.5*(_x[a2]+_x[a2+1]); wenn a 
+		sonst
+			_x075 = 0.5*_x[a2+1]
+		end
+		wenn b3 = 0
+			_x050 = 0.5*(_x[a3]+_x[a3+1]); wenn a 
+		sonst
+			_x050 = 0.5*_x[a3+1]
+		end
+		_x_iqr = binde(_x_iqr, _x075-_x025); Interquartile oder quartilabstand
+		_x_median = binde(_x_median, _x050); Median -> x050 or q2
+		_x_025 = binde(_x_025, _x025); LowerQuartile -> Boxplot Quartil -> q1
+		_x_075 = binde(_x_075, _x075); UpperQuartile -> Boxplot Quartil -> q3
+		_x_range = binde(_x_range, max(_x)-min(_x))
+		_x_mean = mean(_x)
+		_x_std = streu(_x)
+		;x_skew = binde(x_skew, 1/n*summe(((x-mean(x))/Streu(x-mean(x)))^3));
+		;x_kurt = binde(x_kurt, 1/n*summe(((x-mean(x))/Streu(x-mean(x)))^4));
+		delta = 1.5*(_x075-_x025); w = maximum whisker length
+		
+		wenn 1; k = 1.5 für outlier, k = 3 für extreme
+			_x_lower = binde(_x_lower,_x025 - 1.5*delta)
+			_x_upper = binde(_x_upper,_x075 + 1.5*delta)
+		sonst
+			x_lower = x_min
+			x_upper = x_max
+		ende
+		x_lowup = _x_upper - _x_lower
+		
+		if 0
+			a1 = oben(_x_g-_x075 - 1.5*delta,0)
+			a2 = oben(_x025 - 1.5*delta - _x_g, 0)
+			_outliers = lang?(a1) + lang?(a2)
+		else
+			_aa = abs(_x_g-_x_mean) - 3*_x_std
+			a1 = oben(_aa,0)
+			_outliers = lang?(a1)
+		ende
+		_x_outliers = binde(_x_outliers,_outliers )
+		_x3stdm = - 3*_x_std
+		_x3stdp = 3*_x_std
+	
+		;	    for y in data_1:
+		;        """
+		;        •	Ausreisser: 		a) > y > mean + 3*std or y < mean - 3*std		b) > y > q75 + 1.5*iqr or y < q25 - 1.5*iqr
+		;        •	Extremwert: 		a) > y > mean +5*std or y < mean - 5*std		b) > y > q75 + 3*iqr or y < q25 3 * iqr 
+		;
+		;        """
+		;        # z_score = (y - mean_1) / std_1
+		;        # if np.abs (z_score) > threshold:
+		;        if y > df_q75 + 1.5 * iqr or y < df_q25 - 1.5 * iqr:
+		;            outliers.append (y)
+		;    outliers_size = len(outliers)
+	
+		seteinheit(_x_iqr,einheit?(_signalx,1),1)
+		seteinheit(_x_median,einheit?(_signalx,1),1)
+		seteinheit(_x_lower,einheit?(_signalx,1),1)
+		seteinheit(_x_upper,einheit?(_signalx,1),1)
+		seteinheit(x_lowup,einheit?(_signalx,1),1)
+		seteinheit(_x_025,einheit?(_signalx,1),1)
+		seteinheit(_x_075,einheit?(_signalx,1),1)
+		seteinheit(_x_range,einheit?(_signalx,1),1)
+		seteinheit(_x_outliers,"",1)
+		
+		nbins = 100
+		_x_histo_sig_g = histo(_x_g, (max(_x_g)-min(_x_g))/nbins, nbins)
+		_x_histo_int = int(_x_histo_sig_g)
+		_x_histo_area = wert(_x_histo_int,lang?(_x_histo_int))-wert(_x_histo_int,1)		
+		_x_histo_area_kask = binde(_x_histo_area_kask,_x_histo_area)
+		;_x_histo_sig = binde(_x_histo_sig, _x_histo_sig_g)
+		unit = ""
+		sequenz Create_EventData_STFT "histo_event" _x_histo_sig_g unit
+		seteinheit (histo_event,einheit?(_signalx,1),0)
+	ende
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; FindConstantSectors in Signals
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if file_monitoring = 0 ; ->diagnose
+		dx = abs(diff(_x_g));*xdel?(x))
+		xvec = rampe(0,1,lang?(dx))
+		dx1 = xyvon(xvec, dx)
+		zero_pos = Alle0(dx1)
+	
+		;zero_val = 1e-6
+		;zero_pos1 = Suchepegel(dx1, 1, zero_val, 0, 0, 0,0,0)
+		;zero_pos1 = zero_pos1.x
+		;dx_ = -1*dx1
+		;zero_pos2 = Oben(dx_, -1* zero_val)
+		delta = diff(zero_pos)
+	
+		sequenz search_item Asset_Props:Name "NconstPoints"
+		numb_points_const = tzuew (Asset_Props:Val[search_index],"a")
+		if numb_points_const = 0; or tverg(numb_points_const,"") = 0
+			numb_points_const = 5
+		ende
+	
+		delta_red = mvmean(delta, numb_points_const, 1)
+		posi_nconst_ = posiex(delta_red,1)
+		nconst = lang?(posi_nconst_)
+		_x_nconst = binde(_x_nconst, nconst)
+		seteinheit(_x_nconst,"",1)
+	end
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;3) Statistische Parameteranalyse -> RMS, MIN, MAX, MITTEL, CREST, KURTOSIS, STD
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+	_x_mv = mitte(_x_g); Mean values
+	_x_max = max(_x_g); MAX values
+	_x_min = min(_x_g); MIN values
+	_x_peak = max(abs(_x_g)); Peak values
+	_x_peak2peak = _x_max - _x_min; 
+	_x_eff = eff(_x_g-_x_mv); RMS values
+	_x_crest = (_x_max - _x_min)/(2*_x_eff); Crest-faktor _x_peak/_x_eff_a; 
+	_x_std = streu(_x_g-_x_mv); Variance values
+	_x_ac = _x_g - _x_mv; Kurtosis
+	_x_kurtosis = 1/lang?(_x_g)*summe(((_x_ac)/Streu(_x_ac))^4); Kurtosis
+	_x_skewness = 1/lang?(_x_g)*summe(((_x_ac)/Streu(_x_ac))^3); skewness;
+	
+	_x_mv_kask = binde(_x_mv_kask,_x_mv)
+	_x_max_kask = binde(_x_max_kask,_x_max)
+	_x_min_kask = binde(_x_min_kask,_x_min)
+	_x_peak_kask = binde(_x_peak_kask,_x_peak)
+	_x_peak2peak_kask = binde(_x_peak2peak_kask,_x_peak2peak)
+	_x_eff_kask = binde(_x_eff_kask,_x_eff)
+	_x_crest_kask = binde(_x_crest_kask,_x_crest)
+	_x_std_kask = binde(_x_std_kask,_x_std)
+	_x_kurtosis_kask = binde(_x_kurtosis_kask,_x_kurtosis)
+	_x_skewness_kask = binde(_x_skewness_kask,_x_skewness); skewness
+
+	seteinheit(_x_mv_kask,_unit_signalx,1)
+	seteinheit(_x_max_kask,_unit_signalx,1)
+	seteinheit(_x_min_kask,_unit_signalx,1)
+	seteinheit(_x_peak_kask,_unit_signalx,1)
+	seteinheit(_x_peak2peak_kask,_unit_signalx,1)
+	seteinheit(_x_eff_kask,_unit_signalx,1)
+	seteinheit(_x_std_kask,_unit_signalx,1)
+	seteinheit(_x_crest_kask,"",1)
+	seteinheit(_x_kurtosis_kask,"",1)
+	seteinheit(_x_skewness_kask,"",1)
+		
+	; integration -> filtering -> parameter calculation
+	; _ipeak, _ipeak2peak, _irms, _imean
+	store_int_metrics = 0
+
+	if filter_lpf = filter_hpf and integration = 0
+		store_int_metrics = 0
+		; filter not activated
+		; integration not activated
+		; no new metrics
+	else
+		store_int_metrics = 1
+		if tverg(_unit_signalx,"g") = 0
+			_x_g_ = 9.81 * _x_g
+			seteinheit(_x_g_,"m/s^2",1)
+		ende
+		if integration = 0
+			_x_g_int = _x_g
+		elseif integration = 1
+			_x_g_int = int(FiltHP(_x_g,0,0,10,1))
+		elseif integration = 2
+			_x_g_int = int(FiltHP(_x_g,0,0,10,1))
+			_x_g_int = int(FiltHP(_x_g_int,0,0,10,1))
+		else
+			_x_g_int = _x_g
+		ende
+			
+		if filter_lpf > filter_hpf
+			_x_g_f = FiltBP(_x_g_int,0,0,10,filter_hpf,filter_lpf)
+		elseif filter_lpf < filter_hpf
+			_x_g_f = FiltBS(_x_g_int,0,0,10,filter_lpf,filter_hpf)
+		else
+			_x_g_f = _x_g_int
+		end
+		_x_nlang =  lang?(_x_g_f)
+		_x_n0 = 0.1 * _x_nlang
+		_x_g_f_= grenindex(_x_g_f, _x_n0, _x_nlang)
+			 
+		_x_imin = min(_x_g_f_)
+		_x_imax = max(_x_g_f_)
+		_x_imean = mitte(_x_g_f_)
+		_x_irms =  eff(_x_g_f_  - _x_imean); 
+		_x_ipeak = max(abs(_x_g_f_))
+		_x_ipeak2peak = _x_imax - _x_imin
+			
+		_unit_x_g_f = einheit?(_x_g_f,1)
+			
+			
+		_x_irms_kask = binde(_x_irms_kask,_x_irms)
+		_x_ipeak_kask = binde(_x_ipeak_kask,_x_ipeak)
+		_x_imean_kask = binde(_x_imean_kask,_x_imean)
+		_x_ipeak2peak_kask = binde(_x_ipeak2peak_kask,_x_ipeak2peak)
+		seteinheit(_x_irms_kask,_unit_x_g_f,1)
+		seteinheit(_x_ipeak_kask,_unit_x_g_f,1)
+		seteinheit(_x_imean_kask,_unit_x_g_f,1)
+		seteinheit(_x_ipeak2peak_kask,_unit_x_g_f,1)		
+	ende
+		
+;	if 0
+;		_x_eff_a = eff(_x_g-_x_mv); RMS values
+;		_x_eff_v = eff(int(FiltHP(_x_g,0,0,10,1)))
+;		_x_eff_a_lf = eff(FiltBP(_x_g,0,0,4,0.1,10))
+;		_x_eff_v_lf = eff(int(FiltBP(_x_g,0,0,4,0.1,10)))
+;		wenn _fs > 2560 
+;			_x_eff_a_iso = eff(FiltBP(_x_g,0,0,4,10,1000))
+;			_x_eff_v_iso = eff(int(FiltBP(_x_g,0,0,4,10,1000)))
+;			_x_eff_a_hf = eff(FiltBP(_x_g,0,0,4,1000,_Fs/2.56))	
+;			_x_eff_v_hf = eff(int(FiltBP(_x_g,0,0,4,1000,_Fs/2.56)))
+;		sonst
+;			_x_eff_a_iso = eff(FiltBP(_x_g,0,0,4,10,_Fs/2.56))
+;			_x_eff_v_iso = eff(int(FiltBP(_x_g,0,0,4,10,_Fs/2.56)))
+;			_x_eff_a_hf = 0	
+;			_x_eff_v_hf = 0
+;		ende
+;		_x_eff_a_kask = binde(_x_eff_a_kask,_x_eff_a)
+;		_x_eff_a_lf_kask = binde(_x_eff_a_lf_kask,_x_eff_a_lf)
+;		_x_eff_a_iso_kask = binde(_x_eff_a_iso_kask,_x_eff_a_iso)
+;		_x_eff_a_hf_kask = binde(_x_eff_a_hf_kask,_x_eff_a_hf)
+;		_x_eff_v_kask = binde(_x_eff_v_kask,_x_eff_v)
+;		_x_eff_v_lf_kask = binde(_x_eff_v_lf_kask,_x_eff_v_lf)
+;		_x_eff_v_iso_kask = binde(_x_eff_v_iso_kask,_x_eff_v_iso)
+;		_x_eff_v_hf_kask = binde(_x_eff_v_hf_kask,_x_eff_v_hf)
+;			
+;		seteinheit(_x_eff_a_kask,_unit_signalx,1)
+;		seteinheit(_x_eff_v_kask,_unit_int_signalx,1)
+;
+;		_x_average_rec = sum(abs(_x_g))/lang?(_x_g); average rectified
+;		_x_clf = max(abs(_x_g))/_x_average_rec^2; clearance
+;		_x_if = max(abs(_x_g))/_x_average_rec^2; Impulse factor
+;		_x_ff = _x_eff_a/_x_average_rec; Impulse factor
+;		_x_average_rec_kask = binde(_x_average_rec_kask,_x_average_rec); average rectified
+;		_x_clf_kask = binde(_x_clf_kask,_x_clf); clearance
+;		_x_if_kask = binde(_x_if_kask,_x_if); Impulse factor
+;		_x_ff_kask = binde(_x_ff_kask,_x_ff); Impulse factor
+;		seteinheit(_x_average_rec_kask,_unit_signalx,1)
+;		seteinheit(_x_clf_kask,_unit_signalx,1); to be adapted
+;		seteinheit(_x_if_kask,_unit_signalx,1); to be adapted
+;	ende		
+	_nn = _nn + 1
+ENDE
+
+
+if file_monitoring = 0 ; ->diagnosis
+;	SetSegLang(_x_histo_sig,lang?(_x_histo_sig_g))
+;	Feature:histogram_seg = _x_histo_sig
+;	_anz_seg = Lang?(Feature:histogram_seg)/SegLang?(Feature:histogram_seg)
+;	Feature:histogram = MatrixSumLines(Feature:histogram_seg,0)/_anz_seg;_x_histo_sig
+	
+	Feature:histo_event = histo_event
+	
+	Feature:x_iqr = _x_iqr; Interquantile = x_075 - x_025
+	Feature:x_median = _x_median; median or 50% quantile
+	Feature:x_025 = _x_025; 25% quantile
+	Feature:x_075 = _x_075; 75% quantile
+	Feature:x_lower = _x_lower; Unterer Whisker -> x_025 - 1.5*iqr
+	Feature:x_upper = _x_upper; Oberer Whisker -> x_075 +1.5 * iqr
+	Feature:x_lowup = x_lowup
+	Feature:x_range = _x_range; range = max-min
+	Feature:x_outliers = _x_outliers; # of outliers 
+	Feature:x_nconsts = _x_nconst; # of constant sectors with 2 position = equal
+	;Feature:x_average_rec =	_x_average_rec_kask ; average rectified
+	Feature:x_histo_area = _x_histo_area_kask
+	Feature:x_histo_area = _x_histo_area_kask
+	
+end
+
+Ch_Config:Zeitfensterbreite_zk = _T_fenster
+Ch_Config:overlap_zk = _overlap
+Ch_Config:Gesamtfenster_zk = _Tgesamt
+Ch_Config:Samples_zk = _anzahl_it_mit_overlap
+Feature:Tmittel_zk = _Tmittel_kask
+wenn lang?(_peak)>2
+	Feature:drehzahl_zk = _drehzahl_kask
+ende
+Feature:x_eff = _x_eff_kask
+Feature:x_mv = _x_mv_kask
+Feature:x_max = _x_max_kask
+Feature:x_min = _x_min_kask
+Feature:x_peak = _x_peak_kask
+Feature:x_peak2peak = _x_peak2peak_kask
+Feature:x_crest = _x_crest_kask
+Feature:x_std = _x_std_kask
+Feature:x_kurtosis = _x_kurtosis_kask
+Feature:x_skewness =_x_skewness_kask ; skewness
+
+
+wenn store_int_metrics
+	Feature:x_irms = _x_irms_kask
+	Feature:x_imean = _x_imean_kask
+	Feature:x_ipeak = _x_ipeak_kask
+	Feature:x_ipeak2peak= _x_ipeak2peak_kask
+ende
+	
+wenn 0
+	Feature:x_eff_a = _x_eff_a_kask
+	Feature:x_eff_v = _x_eff_v_kask
+	Feature:x_eff_a_lf = _x_eff_a_lf_kask
+	Feature:x_eff_v_lf = _x_eff_v_lf_kask
+	Feature:x_eff_a_iso = _x_eff_a_iso_kask
+	Feature:x_eff_v_iso = _x_eff_v_iso_kask
+	Feature:x_eff_a_hf = _x_eff_a_hf_kask
+	Feature:x_eff_v_hf = _x_eff_v_hf_kask
+	Feature:x_clf =_x_clf_kask ; clearance
+	Feature:x_if =_x_if_kask ; Impulse factor
+	Feature:x_ff = _x_ff_kask; Impulse factor
+ende
+	
+	
+
+

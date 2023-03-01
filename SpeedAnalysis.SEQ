@@ -1,0 +1,120 @@
+sequenz imc_logging "speed_analysis started"
+
+
+; Identify T0 (Trigger Time)
+DateTime_Wert = Zeit?(Data_Channel:[1]); + xoff?(Data_Channel:[1]); sonst gibt es probleme bei nichtzeitsynchronisierten Signalen
+				
+; Resampling Zeit und Pulssignal
+if PA1 = 1
+	step_ = "speed analysis"
+	PnSetText("Step",step_)
+ende
+
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;	Sequenz zur Berechnung von statistischen Kenngrößen aus dem Rohsignal
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Inputs
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_peak = 	Feature:ChannelX
+;_Triglevel = PA2
+;_PulsPerRev = PA3
+;windowlength = PA4;
+;_overlap = PA5;:overlap; Überlappung
+
+
+;SonderMessung = 1
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Vorbereitung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+xoffset _peak 0
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Rechenteil
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+T_fenster = windowlength*xdel?(_peak); Fensterbreite
+deltaf = 1/T_fenster; Abtastzeit
+Fs = 1/xdel?(_peak); Abtastfrequenz
+Tgesamt = lang?(_peak)*xdel?(_peak); Gesamte Messdauer
+wenn T_fenster > Tgesamt
+	T_fenster = Tgesamt
+ende
+anzahl_it_mitoverlap = ganz((Tgesamt-overlap/100*T_fenster)/(T_fenster-overlap/100*T_fenster)); Anzahl der Iterationen mit Overlap-Fkt
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Zu berechnenden Zeitkennwerte
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_drehzahl_kask = leer; Drehzahl 
+_Tmittel_kask = leer;
+
+_nn = 1;
+SOLANGE _nn <= anzahl_it_mitoverlap 
+	; Overlap theorie
+	;Tgesamt = windowlength*Tfenster - (windowlength-1)*Overlap*Tfenster
+	;Tbeginn = i*Tfenster - (i-1)*Overlap*Tfenster - Tfenster
+	;Tende = i*Tfenster - (i-1)*Overlap*Tfenster 
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;1) Zeitfenster Selektion
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	_Tbeginn = (_nn-1)*T_fenster-(_nn-1)*overlap/100*T_fenster
+	_Tende = _nn*T_fenster-(_nn-1)*overlap/100*T_fenster;Tbeginn + T_fenster
+	T_fenster_verifikation = _Tende-_Tbeginn
+	_N_beginn = floor(((_nn-1)-(_nn-1)*overlap/100)*windowlength);
+	_N_end = floor((_nn-(_nn-1)*overlap/100)*windowlength)-1
+	_Tmittel = (_Tende+_Tbeginn)/2
+	_Tmittel_kask = binde(_Tmittel_kask,_Tmittel)
+
+	wenn _nn = 1
+		wenn lang?(_peak)>2
+			_peak_g = grenindex(_peak,(_nn-1)*windowlength+1,_nn*windowlength)
+		ende
+	sonst
+		wenn lang?(_peak)>2
+			_peak_g = grenindex(_peak,_N_beginn,_N_end)
+		ende
+	ende
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;2) Drehzahl und Drehfrequenzbestimmung -> F0, Drehzahl
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	wenn lang?(_peak)>2
+		_dp = diff(_peak_g)*xdel?(_peak_g)
+		_Tx = posiex(_dp,2); findet alle Zeiten, wo peak <= 0
+		_anz_peak = lang?(_Tx)
+		entf _dp
+		entf _Tx	
+		_Var = 2
+		sequenz Pulse2Speed _peak_g TrigLevel PulsPerRev 2
+		
+		_drehzahl_kask = binde(_drehzahl_kask,_drehzahl_mitte)
+	ende
+	
+	_nn = _nn + 1
+ENDE
+
+Feature:Tmittel_zk = _Tmittel_kask
+wenn lang?(_peak)>2
+	Feature:drehzahl_kask = _drehzahl_kask
+ende
+_WatchVarName_ = tadd(ChannelXName,"_speed")			
+Feature:DateTime = DateTime_Wert + Feature:Tmittel_zk
+ViSA_Parameter_Trend:{<_WatchVarName_>} =xyvon(Feature:DateTime,Feature:drehzahl_kask)
+
+ChannelSpeed = Feature:drehzahl_kask; KF:drehzahl
+Feature:ChannelSpeed = ChannelSpeed
+_F0_mitte = mitte(ChannelSpeed)
+if PA1 = 1
+	PnSetText("F0",tform(_F0_mitte,"f4.2"))
+	sequenz UpdateDataList
+ende
+
+
+
+
+
+
+

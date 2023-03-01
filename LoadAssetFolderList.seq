@@ -1,0 +1,34 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Input: AssetFolderList.txt
+; Output: AssetFolderList - DropDownMenu
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+sequenz imc_logging "load_asset_folder_list started"
+
+
+path_assetfolder_list = "C:\BDA\AssetFolderList.txt"
+_fh= FileOpenASCII( path_assetfolder_list,0 )
+if _fh > 0
+	_TxZeile = ""
+	_ok = 0
+	_count = 0
+	AssetFolderItem = TxArrayCreate(0)
+	solange _ok = 0
+		_ok = FileLineRead( _fh, _TxZeile, 0 )
+		if _ok = 0 and _count >= 1
+			AssetFolderItem[_count] = _TxZeile
+			sequenz insert_item "AssetFolderList" AssetFolderItem[_count]
+		ende
+		_count = _count + 1
+	ende
+	FileClose(_fh)
+	PnSelectItem("AssetFolderList",1)
+	AssetFolderIdx = PnGetSelectedItem("AssetFolderList")
+	AssetFolder = PnGetItemText("AssetFolderList",AssetFolderIdx)
+sonst
+	_err = FileErrCode?()
+	zeigen _err
+ende
+
+
+

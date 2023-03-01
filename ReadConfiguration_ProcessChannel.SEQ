@@ -1,0 +1,291 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Read Aktuelle Konfiguration
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;DlgSetValue(,Ch_Config:tachochannel)
+;_index = tzuew(Ch_Config:windowfft[1],"f")
+sequenz imc_logging "read_configuration started"
+
+; filter_lpf = filter_hpf and integration = 0
+integration = tzuew(Ch_Config:Integration[_kkk],"f")
+filter_hpf =tzuew(Ch_Config:Filter_HPF[_kkk],"f")
+filter_lpf = tzuew(Ch_Config:Filter_LPF[_kkk],"f")
+
+
+timeanalysis = Ch_Config:timeanalysis[_kkk]
+
+orbitanalysis = Ch_Config:orbitanalysis[_kkk]
+
+fftanalysis = Ch_Config:fftanalysis[_kkk]
+
+orderanalysis = Ch_Config:orderanalysis[_kkk]
+
+envelopeanalysis = Ch_Config:envelopeanalysis[_kkk]
+
+
+
+windowfft = Ch_Config:windowfft[_kkk]
+wenn windowfft = "Rechteck"
+	_index = 1;0
+ende
+wenn windowfft = "Hanning"
+	_index = 2;2
+ende
+wenn windowfft = "Flattop"
+	_index = 3;5
+ende
+window = _index
+
+overlap = tzuew(Ch_Config:overlap[_kkk],"f")
+
+average = Ch_Config:average[_kkk]
+wenn average  = "None"
+	_index = 1
+ende
+wenn average  = "Linear"
+	_index = 2
+ende
+wenn average  = "PeakHold"
+	_index = 3
+ende
+average = _index
+
+
+BPFu = tzuew(Ch_Config:BPFu_Env[_kkk],"f")
+
+BPFo = tzuew(Ch_Config:BPFo_Env[_kkk],"f")
+
+TPF = tzuew(Ch_Config:TPF_Env[_kkk],"f")
+
+
+PulsPerRev = tzuew(Ch_Config:PulsPerRev[_kkk],"f")
+
+Triglevel = tzuew(Ch_Config:TrigLevel[_kkk],"f")
+
+
+RotatingDirection = Ch_Config:RotatingDirection[_kkk]
+
+
+RotatingOrder = Ch_Config:RotatingOrder[_kkk]
+
+envType = Ch_Config:EnvelopeType[_kkk]
+wenn envType = "Integrated"
+	_index = 1;0
+ende
+wenn envType  = "Gleichrichtung"
+	_index = 2;2
+ende
+wenn envType  = "Hilbert"
+	_index = 3;5
+ende
+envtype = _index
+
+
+SampPerRev = tzuew(Ch_Config:samplesPerRev[_kkk],"f")
+Omax = SampPerRev/2
+
+twindow = tzuew(Ch_Config:windowlength[_kkk],"a")
+number_of_samples_total = lang?(Feature:channelx)
+dt = xdel?(Feature:channelx)
+fs = 1/dt
+signal_time_length = number_of_samples_total*dt
+number_samples_per_window = twindow/dt
+Length = number_samples_per_window
+windowlength = length
+
+pam = Length/SampPerRev;tzuew(Ch_Config:rev_per_windowlength[1],"f")
+
+dO = 1/pam
+
+
+averages = ganz((number_of_samples_total-overlap/100*number_samples_per_window)/(number_samples_per_window-overlap/100*number_samples_per_window));
+wenn averages < 0
+	BoxNachricht("Configuration error","Please reduce the block size (Length)","?1")
+ende
+deltat = number_samples_per_window*dt
+deltaf = 1/deltat
+
+wenn Tachochannel <> -1
+	_index = GrKanalFinde(Feature,"Channelpuls")
+	wenn _index > 0
+		sequenz SignaleGleichSetzen Feature:ChannelX Feature:Channelpuls
+		_vibsignal = _sig1
+		_pulssignal = _sig2
+		;_peak_1 = _pulssignal - _TrigLevel 
+		_peak = STri(_pulssignal,_Triglevel,_Triglevel)
+		OtrTachoMode(3, 0, _PulsPerRev, 0)
+		_rs = OtrResample(_vibsignal,_peak,_Omax ,1)
+		_Tgesamt = ganz(lang?(_rs))
+		_T_fenster = _pam*_SampPerRev
+		a = _Tgesamt/_T_fenster
+		nn_mit_overlap = ganz((_Tgesamt-_overlap/100*_T_fenster)/(_T_fenster-_overlap/100*_T_fenster)); Anzahl der Iteration
+
+	ende
+ende
+
+
+; finde und setze channelpuls
+_ind_channelPuls = Ch_Config:TachoChannel[_kkk]
+wenn _ind_channelPuls <> "None"
+	sequenz search_item Ch_Config:ChName _ind_channelPuls ; search_index -> search the configuration of the current channel in the xlsconfig file
+	_kkpuls = search_index ; tzuew(tteil(_ind_channelpuls,3,5),"f")+1
+
+	_parname_channelPuls = Ch_Config:SigName[_kkpuls]
+
+	_kpuls =GrKanalFinde(Data_Channel,_parname_channelPuls)
+	{<_parname_channelPuls>} = Data_Channel:[_kpuls]
+
+	Feature:ChannelPuls  = {<_parname_channelPuls>}
+	ChannelPuls = {<_parname_channelPuls>}
+	TachoChannelNameIst = _parname_channelPuls
+sonst
+	TachoChannelNameIst = "None"
+end
+
+
+;finde und setze channely
+_ind_channely = Ch_Config:OrbitChannelY[_kkk]
+wenn _ind_channely = "None"
+	ChannelYName_orbit = Ch_Config:SigName[_kkk]
+	Feature:ChannelY_orbit = Data_Channel:{<ChannelYName_orbit>};[_kkk]
+	_kky = _kkk
+sonst
+	_kky = tzuew(tteil(_ind_channely,3,5),"f")+1	
+	sequenz search_item Ch_Config:ChName _ind_channely; search_index -> search the configuration of the channely of current channel in the xlsconfig file
+	ChannelYName_orbit = Ch_Config:SigName[search_index]
+	_kky =GrKanalFinde(Data_Channel,ChannelYName_orbit)
+	Feature:ChannelY_orbit = Data_Channel:[_kky]
+ende
+Feature:ChannelY = Feature:ChannelY_orbit
+ChannelYName = ChannelYName_orbit
+
+; FUER SUES MIT MEHREREN CORRELATIONS-FRF CHY
+FRF_ChY_List = TxArrayCreate(0)
+if  sues
+	
+	CorrList = CorrTable:CorrList
+	SigList = CorrTable:Signame
+	sequenz search_item SigList ChannelXName
+	_channely =CorrTable:CorrList[search_index]
+	wenn _channely <> "#" and _channely <> "None"
+		_frf_chy_list = TxSplit(_channely,"#")
+		_frf_chy_len = TxArrayGetSize(_frf_chy_list)
+		for _frf_i = 1 to _frf_chy_len
+			ChannelYName_frf = _frf_chy_list[_frf_i]
+			FRF_ChY_List[_frf_i] = ChannelYName_frf
+			_kky =GrKanalFinde(Data_Channel,ChannelYName_frf)
+			Feature:{<ChannelYName_frf>} = Data_Channel:[_kky]
+			Feature:ChannelY_frf   = Data_Channel:[_kky]
+		ende
+	ende
+	ChannelYName_frf = FRF_ChY_List
+else
+	_channely = Ch_Config:FRFChannelY[_kkk]; -> Chxxx
+	wenn _channely <> "None"
+		;if txwo(tteil(_channely[1],1,2), "Ch") <> 0
+		FRF_ChY_idx_list = leer
+		_frf_chy_list = TxSplit(_channely,"#")
+		_frf_chy_len = TxArrayGetSize(_frf_chy_list)
+		for _frf_i = 1 to _frf_chy_len
+			_frf_chy_i = _frf_chy_list[_frf_i]
+			_frf_chy_idx = tzuew(tteil(_frf_chy_i,3,5),"f")+1	
+			FRF_ChY_idx_list = binde(FRF_ChY_idx_list, _frf_chy_idx)	
+			; _kky = tzuew(tteil(_channely,3,5),"f")+1	
+			sequenz search_item Ch_Config:ChName _frf_chy_i; search_index -> search the configuration of the channely of current channel in the xlsconfig file
+			ChannelYName_frf = Ch_Config:SigName[search_index]
+			;ch_frf_par_liste[frf_count] = vms_par
+			FRF_ChY_List[_frf_i] = ChannelYName_frf
+			_kky =GrKanalFinde(Data_Channel,ChannelYName_frf)
+			Feature:{<ChannelYName_frf>} = Data_Channel:[_kky]
+			Feature:ChannelY_frf   = Data_Channel:[_kky]
+		ende
+	ende
+	
+	;	;finde und setze channely_frf
+	;	_ind_channely_frf = Ch_Config:FRFChannelY[_kk_config]
+	;	wenn _ind_channely_frf <> "None"
+	;		_kky = tzuew(tteil(_ind_channely_frf,3,5),"f")+1	
+	;		sequenz search_item Ch_Config:ChName _ind_channely_frf; search_index -> search the configuration of the channely of current channel in the xlsconfig file
+	;		ChannelYName_frf  = Ch_Config:SigName[search_index]
+	;		_kky =GrKanalFinde(Data_Channel,ChannelYName_frf)
+	;		Feature:ChannelY_frf   = Data_Channel:[_kky]
+	;	ende
+
+ende
+
+ch_psd_par_liste = TxArrayCreate(0)
+ch_frf_par_liste = TxArrayCreate(0)
+ch_fft_par_liste = TxArrayCreate(0)
+if txarraygetsize(VMS_Freq_Table:ParName) > 1
+	fft_count = 0
+	psd_count = 0
+	frf_count = 0
+	for _pari = 1 to txarraygetsize(VMS_Freq_Table:ParName)
+		vms_par = VMS_Freq_Table:ParName[_pari]
+		vms_pari_parts = txsplit(vms_par,"_")
+		vms_pari_kf@freq = txsplit(vms_pari_parts[2],"@")
+		if txarraygetsize(vms_pari_parts) > 2 
+			if txwo(vms_pari_parts[3],"@")  <> 0
+				vms_pari_kf@freq = txsplit(vms_pari_parts[3],"@")
+			end
+		ende
+		vms_pari_sig = vms_pari_parts[1]
+		vms_pari_kf = vms_pari_kf@freq[1]
+		vms_pari_freq = vms_pari_kf@freq[2]
+		if tverg(ChannelXName,vms_pari_sig) = 0
+			vms_pari_sig2 = vms_pari_parts[2]
+			if tverg("fft",vms_pari_kf) = 0  and txarraygetsize(vms_pari_parts) >= 2
+				fft_count = fft_count + 1
+				ch_fft_par_liste[fft_count] = vms_par
+			ende
+			if tverg("psd",vms_pari_kf) = 0 and txarraygetsize(vms_pari_parts) = 2
+				psd_count = psd_count + 1
+				ch_psd_par_liste[psd_count] = vms_par
+			ende
+			if tverg("frf",vms_pari_kf) = 0 and txarraygetsize(vms_pari_parts) = 3
+				frf_count = frf_count + 1
+				ch_frf_par_liste[frf_count] = vms_par
+				FRF_ChY_List = TxArrayInsert(FRF_ChY_List,vms_pari_sig2,-1)
+				Feature:{<vms_pari_sig2>} = Data_Channel:{<vms_pari_sig2>}
+			ende
+		ende
+	ende
+	count = TxArrayClean(FRF_ChY_List, 0)
+end
+
+;ch_psd_par_liste = TxArrayCreate(0)
+;ch_frf_par_liste = TxArrayCreate(0)
+;ch_fft_par_liste = TxArrayCreate(0)
+;if txarraygetsize(VMS_Freq_Table:ParName) > 1
+;	fft_count = 0
+;	psd_count = 0
+;	frf_count = 0
+;	for _pari = 1 to txarraygetsize(VMS_Freq_Table:ParName)
+;		vms_par = VMS_Freq_Table:ParName[_pari]
+;		vms_pari_parts = txsplit(vms_par,"_")
+;		vms_pari_kf@freq = txsplit(vms_pari_parts[2],"@")
+;		if txarraygetsize(vms_pari_parts) > 2 
+;			vms_pari_kf@freq = txsplit(vms_pari_parts[3],"@")
+;		ende
+;		vms_pari_sig = vms_pari_parts[1]
+;		vms_pari_kf = vms_pari_kf@freq[1]
+;		vms_pari_freq = vms_pari_kf@freq[2]
+;		if tverg(ChannelXName,vms_pari_sig) = 0
+;			vms_pari_sig2 = vms_pari_parts[2]
+;			if tverg("fft",vms_pari_kf) = 0
+;				fft_count = fft_count + 1
+;				ch_fft_par_liste[fft_count] = vms_par
+;			ende
+;			if tverg("psd",vms_pari_kf) = 0
+;				psd_count = psd_count + 1
+;				ch_psd_par_liste[psd_count] = vms_par
+;			ende
+;			if tverg("frf",vms_pari_kf) = 0
+;				frf_count = frf_count + 1
+;				ch_frf_par_liste[frf_count] = vms_par
+;				FRF_ChY_List = TxArrayInsert(FRF_ChY_List,vms_pari_sig2,-1)
+;				Feature:{<vms_pari_sig2>} = Data_Channel:{<vms_pari_sig2>}
+;			ende
+;		ende
+;	ende
+;	count = TxArrayClean(FRF_ChY_List, 0)
+;end

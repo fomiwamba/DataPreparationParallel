@@ -1,0 +1,56 @@
+sequenz imc_logging "find_signals_with_constants started"
+; sequenz FindSigWithConstants
+; input = Sig
+; index = 0 or 1
+; output = zero_pos
+
+index = 1
+
+x = S4X
+
+;x[100] = 0
+;x[101] = 0
+;x[102] = 0
+;x[103] = 0
+;x[104] = 0
+;x[105] = 0
+
+dx = abs(diff(x));*xdel?(x))
+
+if index = 0
+	dt=xdel?(x)
+else
+	dt = 1
+ende
+xvec = rampe(0,dt,lang?(dx))
+
+dx1 = xyvon(xvec, dx)
+
+;zero_val = 1e-12
+;zero_pos1 = Suchepegel(dx1, 1, zero_val, 0, 0, 0,0,0)
+;zero_pos1 = zero_pos1.x
+;dx_ = -1*dx1
+;zero_pos2 = Oben(dx_, -1* zero_val)
+
+zero_pos = Alle0(dx1)
+
+delta = diff(zero_pos)
+
+numb_points_const = 5
+delta_red = mvmean(delta, numb_points_const, 1)
+posi_nconst_ = posiex(delta_red,1)
+nconst_ = lang?(posi_nconst_)
+
+idx = 2000
+if idx > lang?(posi_nconst_)
+	idx = lang?(posi_nconst_)
+	zeigen idx
+ende
+if posi_nconst_[idx] = 0
+	zeros_idx =wert(zero_pos, posi_nconst_[idx]+1)
+else
+	zeros_idx =wert(zero_pos, posi_nconst_[idx])
+ende
+last = lang?(zeros_area)
+x_area = grenindex(x,zeros_idx [1]-numb_points_const, zeros_idx [1] + 2*numb_points_const)
+zeigen x_area

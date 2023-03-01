@@ -1,0 +1,68 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Funktion zur Extraktion der Breitbandsenergiewert eines Spektrums
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sequenz imc_logging "freq_energie_schnitt_fft started"
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Inputs
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_Ax_trend = PA1
+_Fu = PA2; 		Minimum Frequenz
+_Fo = PA3; 		Max. Frequenz
+_Freqname = PA4
+;_rms_v = PA5; Aktivierung der Frequenzintegration zur RMS-Wertbildung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Vorbereitung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+NLinien = SegLang?(_Ax_trend)
+_spalte_laenge = lang?(_Ax_trend)/NLinien
+_deltaf = xdel?(_Ax_trend[1])
+_RMS_freq_a = leer;Amplitudenvektor
+
+_spalte_counter = 1
+solange _spalte_counter <= round(_spalte_laenge,1)
+	_spect_x = _Ax_trend[_spalte_counter];_Ax_trend[_spalte_counter];
+	_spect_x = gren(_spect_x,_Fu,_Fo); Amplitudespektrum fuer X
+	wenn lang?(_spect_x) = 0
+		_e_freq_a = 0
+	sonst
+		wenn wfft = 1
+			ENBW_rechteck = 1.0
+		ende
+		wenn wfft = 2
+			ENBW_hanning = 1.5			
+		ende
+		wenn wfft = 3
+			ENBW_flattop = 2.96
+		ende
+		;		ENBW_hamming = 1.37
+		;		ENBW_blackmanharis = 1.71
+		;		_e_freq_a = 1/wurz(2)*wurz(1/ENBW_hanning*sum((_spect_x)^2)); laut Metravib -> ;Monitoring of machines, Chapter 4	
+		_e_freq_a = wurz(1/ENBW_hanning*sum((_spect_x)^2)); laut Metravib -> ;Monitoring of machines, Chapter 4 bei Hanning fenster; 1/wurz(2)*
+		;		_e_freq_a = sum(_spect_x);
+	ende
+	_RMS_freq_a = binde(_RMS_freq_a,_e_freq_a);wert(_spect_x,position); Kreuzspektrum für X
+	_spalte_counter = _spalte_counter + 1
+ende
+_unit_sig = einheit?(_spect_x,1)
+_unit_sig = einheit?(_Ax_trend,1)
+seteinheit (_RMS_freq_a,_unit_sig,1)
+{<_Freqname>} = _RMS_freq_a
+Feature:{<_FreqName>} = _RMS_freq_a
+entf _RMS_freq_a
+
+;sequenz UpdateDataList
+
+;if _windowfft = 0;Rechteck: 1.0
+;	ENBW = 1
+;elseif _windowfft = 1 ; Hamming: 1.3628257
+;	ENBW = 1.3628257
+;elseif _windowfft = 2; Hanning: 1.5000000
+;	ENBW = 1.5
+;elseif _windowfft =3; Blackman: 1.7267573
+;	ENBW = 1.7267573
+;elseif _windowfft = 4; Blackman-Harris: 2.0043528
+;	ENBW = 2.0043528
+;elseif _windowfft = 5; Flat top:  3.7702901
+;	ENBW = 3.7702901
+;ende

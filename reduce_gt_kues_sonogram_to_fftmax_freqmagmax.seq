@@ -1,0 +1,52 @@
+;sequenz reduce_gt_kues_sonogram_to_fftmax_freqmagmax --> fftmax, fftdiff, freqmagmax, freqmagdiff
+
+if 0
+sono = s_BottomChamber_2
+sono = s_TopChamber_1
+sono = s_GuideBlade_3
+end
+
+sono = PA1
+
+sono_t = matrixtranspose(sono)
+fftmax = leer
+fftmin = leer
+fftmean = leer
+fftstd = leer
+n_specs = MatrixInfo(sono,"columns")
+fft_x = ramp(0,xdel?(sono_t),MatrixInfo(sono_t,"rows"))
+for iii = 1 to MatrixInfo(sono,"columns")
+	col_iii = sono:[iii]
+	fftmax = binde(fftmax,max(col_iii))
+	fftmin = binde(fftmin,min(col_iii))
+	fftmean = binde(fftmean,mean(col_iii))
+	fftstd = binde(fftstd,streu(col_iii))
+end
+
+fftmax = xy(fft_x,fftmax)
+fftmin = xy(fft_x,fftmin)
+fftmean = xy(fft_x,fftmean)
+fftstd = xy(fft_x,fftstd)
+fftdiff = fftmax-fftmin
+
+freqmagmax = leer
+freqmagmin = leer
+freqmagmean = leer
+freqmagstd = leer
+freqmag_x = ramp(0,xdel?(sono),MatrixInfo(sono,"rows"))
+for iii = 1 to MatrixInfo(sono_t,"columns")
+	col_iii = sono_t:[iii]
+	freqmagmax = binde(freqmagmax,max(col_iii))
+	freqmagmin = binde(freqmagmin,min(col_iii))
+	freqmagmean = binde(freqmagmean,mean(col_iii))
+	freqmagstd = binde(freqmagstd,streu(col_iii))
+end
+x_off_sono = xoff?(sono)
+;sono = xoff(sono,0)
+freqmagmax = xoff(xy(freqmag_x,freqmagmax),x_off_sono)
+freqmagmin = xoff(xy(freqmag_x,freqmagmin),x_off_sono)
+freqmagmean = xoff(xy(freqmag_x,freqmagmean),x_off_sono)
+freqmagstd = xoff(xy(freqmag_x,freqmagstd),x_off_sono)
+freqmagdiff = freqmagmax- freqmagmin 
+T0_ref = time?(sono)
+SetTime(freqmagdiff,T0_ref)

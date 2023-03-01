@@ -1,0 +1,29 @@
+
+sequenz imc_logging "store_event_data_for_export started"
+output_verz_export = output_verz + "\Export\"
+_status = FsCreateDirectory(output_verz_export)
+wenn _status <>0
+	_error = FsGetLastError()
+ende
+;UserPropSet( parData, "TestNumber", 212, 2, 0) ; ganzzahlig
+;SetKomm( parData, "TestNumber")
+
+sicherungsfile_csv = output_verz_export +"\DiagnosticParameterData_"+Date_ist+".csv"; 
+_fileid = FileOpenAscii2(sicherungsfile_csv, "Parameter_TimeSeries",1)
+_err = FileObjWrite(_fileid,parData)
+_err = FileClose(_fileid)
+		
+sicherungsfile_csv = output_verz_export +"\TimeWaveformData_"+Date_ist+".csv"; 
+_fileid = FileOpenAscii2(sicherungsfile_csv, "CSV_Export_TWF_Barnwood",1)
+_err = FileObjWrite(_fileid,rawData)
+_err = FileClose(_fileid)
+		
+sicherungsfile_csv = output_verz_export +"\AveragedSpectrumData_"+Date_ist+".csv"; 
+_fileid = FileOpenAscii2(sicherungsfile_csv, "CSV_Export_AspecMean_Barnwood",1)
+_err = FileObjWrite(_fileid,avgfftData)
+_err = FileClose(_fileid)
+
+sicherungsfile_csv = output_verz_export +"\SpectrumData_"+Date_ist+".csv"; 
+_fileid = FileOpenAscii2(sicherungsfile_csv, "CSV_Export_AspecSTFT_Barnwood",1)
+_err = FileObjWrite(_fileid,stftData)
+_err = FileClose(_fileid)

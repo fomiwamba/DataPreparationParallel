@@ -1,0 +1,89 @@
+;sequenz create_gtkues_sonogram_png
+
+ChannelName = PA1
+;ChannelName = "sBottomChamber2"
+channel_sonogram = {<ChannelName>}
+gt_kues_sonogram_template = assetfolder + "\gtkues_sonogram.drb"
+sonogram_template = assetfolder + "\channel_sonogram.ccv"
+rms_energy_template = assetfolder + "\energy_sonogram.ccv"
+
+;channel_rms_maxsonogram:rms_channel = PA2
+;channel_rms_maxsonogram:maxsonogram_channel = PA3
+
+rms_channelname = "r" + tteil(ChannelName,2,tleng(ChannelName))
+channel_rms_maxsonogram:rms_channel = file_data_:{<rms_channelname>}
+channel_rms_maxsonogram:maxsonogram_channel = file_data_:{<ChannelName>}
+
+EventName = txreplace(event_folder_ii,"\event\","\Output\ToInflux\",1,0) 
+EventName = tteil(EventName,1,tleng(EventName)-1) + "_"+ date_time_str + ".csv"
+EventName = FsSplitPath(EventName,2)
+
+report_folder = assetfolder + "\" + "reports_" +date_time_str + "\"
+_err = FsCreateDirectory(report_folder)
+if _err <> 0
+	err = BoxNachricht("Info","create report folder error","!1")
+end
+
+err = RgDocOpen( gt_kues_sonogram_template, 0 )
+wenn err = 0
+	RgTextSet("ChannelName",ChannelName,0)
+	RgTextSet("EventName",EventName,0)
+	
+	TxErr$ = CwLoadCCV(channel_sonogram, sonogram_template)
+	wenn tverg(TxErr$,"") <> 0
+		err = BoxNachricht("Info","channel_timeseries_spectra","!1")
+	ende
+	err =RgCurveSet("channel_sonogram",channel_sonogram,0)
+	wenn err <> 0
+		err_txt = "channel_sonogram: " + RgGetErrorText(err)
+		err = BoxNachricht("Info",err_txt,"!1")
+	ende
+	CwSelectWindow(channel_sonogram)
+	CwAction("win.close")	
+	
+	TxErr$ = CwLoadCCV(channel_rms_maxsonogram, rms_energy_template)
+	wenn tverg(TxErr$,"") <> 0
+		err = BoxNachricht("Info","rms_max_sonogram","!1")
+	ende
+	err =RgCurveSet("rms_max_sonogram",channel_rms_maxsonogram,0)
+	wenn err <> 0
+		err_txt ="speed: " + RgGetErrorText(err)
+		err = BoxNachricht("Info",err_txt,"!1")
+	ende
+	CwSelectWindow(channel_rms_maxsonogram)
+	CwAction("win.close")
+			
+		
+
+
+	export_mode = "png"
+	cadis_report_file_new = report_folder + "cadis_report_gtkues_sonogram" + "_" + ChannelName + "_" +date_time_str + "." + export_mode
+	if export_mode = "jpg"
+		err = RgDocExport(cadis_report_file_new, 3, 300, 0, 100 )
+	elseif export_mode = "emf"
+		;cadis_report_file_new = report_folder + "cadis_report_" +date_time_str + ".emf"
+		err = RgDocExport(cadis_report_file_new, 0, 0, 0, 0 )
+	elseif export_mode = "png"
+		;cadis_report_file_new = report_folder + "cadis_report_" +date_time_str + ".png"
+		err = RgDocExport(cadis_report_file_new, 4, 300, 3, 0 )
+	elseif export_mode = "pdf"
+		;cadis_report_file_new = report_folder + "cadis_report_" +date_time_str + ".pdf"
+		err = RgDocExport( cadis_report_file_new, 5, 0,3, 0 )
+	else
+		;cadis_report_file_new = report_folder + "cadis_report_" +date_time_str + ".pdf"
+		err = RgDocExport(cadis_report_file_new, 4, 300, 3, 0 )
+	ende
+	if err < 0
+		err_txt = RgGetErrorText(err)
+		zeigen err_txt
+	else
+		;sleep(1)
+		;ret = Execute( "C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe",cadis_report_file_new , "Open", 2,0)
+	ende
+
+	; close report
+	err =  RgDocClose( 0 )
+	if err < 0
+		zeigen (err)
+	ende
+end

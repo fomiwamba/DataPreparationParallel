@@ -1,0 +1,13 @@
+sequenz imc_logging "store_csv_parameter_file started"
+
+sicherungsfolder = fssplitPath(sicherungsfile_csv,8) 
+_status = FsCreateDirectory(sicherungsfolder)
+wenn _status <>0
+	_error = FsGetLastError()
+ende
+wenn lang?(OP_Data:[1]) > 0 
+	SetDataFormat (OP_Data, 0, 0, 0 ) 
+	_fileid = FileOpenAscii2(sicherungsfile_csv, "Parameter_TimeSeries",1)
+	_err = FileObjWrite(_fileid,OP_Data)
+	_err = FileClose(_fileid)
+ende

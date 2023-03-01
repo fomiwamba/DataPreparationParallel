@@ -1,0 +1,39 @@
+sequenz imc_logging "show_current_channel started"
+
+_idx = PnFindItem("ChannelX",ChannelXName)
+if _idx > 0
+	PnSelectItem("ChannelX", _idx)
+else
+	PnSelectItem("ChannelX", 1)
+end
+
+_idy = PnFindItem("ChannelY",ChannelYName)
+if _idy > 0
+	PnSelectItem("ChannelY", _idy)
+else
+	PnSelectItem("ChannelY", 1)
+end
+					
+PnSetText("Unit",einheit?(Data_Channel:[_kk],1))
+
+					
+sequenz ClearPlots 1
+					
+_index = PnGetSelectedItem("ChannelX")
+wenn _index <> 0
+	_Parname = PnGetItemText("ChannelX", _index)
+	_Paridx = GrChanFind(Data_Channel,_Parname)
+	if _Paridx > 0
+		{<_Parname>}  = Data_Channel:[_Paridx]
+		wenn txwo(_Parname,"#") <> 0 and txwo(_Parname,".") <> 0
+			sequenz plot_2d_trend {<_Parname>} 0 "plot1"
+		sonst 
+			_Parname_ = TErsetze(_Parname,"#","_")
+			_Parname_ = TErsetze(_Parname_,".","_")
+			_Parname_ = TErsetze(_Parname_,"#","_")
+			_Parname_ = TErsetze(_Parname_,".","_")
+			{<_Parname_>} = {<_Parname>} 
+			sequenz plot_2d_trend {<_Parname_>} 0 "plot1"
+		ende
+	ende
+ende

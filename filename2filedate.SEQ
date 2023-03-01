@@ -1,0 +1,78 @@
+sequenz imc_logging "filename_to_filedate started"
+
+
+wenn tdms_files = 1
+	_txtpos = TxWo(_filename,".tdm")
+	_Messdatum = TTeil(_filename,_txtpos-15,15); jjjjmmtt_hhmmss
+	_Sek_ = TTeil(_Messdatum,14,2)
+	_Sek=TzuEW(_Sek_,"e")
+	_Min_ = TTeil(_Messdatum,12,2)
+	_Min=TzuEW(_Min_,"e")
+	_Stun_ = TTeil(_Messdatum,10,2)
+	_Stun=TzuEW(_Stun_,"e")
+	_Tag_ = TTeil(_Messdatum,7,2)
+	_Tag=TzuEW(_Tag_,"e")
+	_Monat_ = TTeil(_Messdatum,5,2)
+	_Monat=TzuEW(_Monat_,"e")
+	_Jahr_ = TTeil(_Messdatum,1,4)
+	_Jahr=TzuEW(_Jahr_,"e")
+ende
+wenn dat_files = 1
+	_txtpos = TxWo(_filename,".dat")
+	_Messdatum = TTeil(_filename,_txtpos-15,15); jjjjmmtt_hhmmss
+	_Sek_ = TTeil(_Messdatum,14,2)
+	_Sek=TzuEW(_Sek_,"e")
+	_Min_ = TTeil(_Messdatum,12,2)
+	_Min=TzuEW(_Min_,"e")
+	_Stun_ = TTeil(_Messdatum,10,2)
+	_Stun=TzuEW(_Stun_,"e")
+	_Tag_ = TTeil(_Messdatum,7,2)
+	_Tag=TzuEW(_Tag_,"e")
+	_Monat_ = TTeil(_Messdatum,5,2)
+	_Monat=TzuEW(_Monat_,"e")
+	_Jahr_ = TTeil(_Messdatum,1,4)
+	_Jahr=TzuEW(_Jahr_,"e")
+ende
+wenn d7d_files = 1
+	; file1 = tteil(file,1,tlang(file)-17)+Date_string	;+".dat" bei dewe files -> yyyy_mm_dd_hhmnss
+	_txtpos = TxWo(_filename,".d7d")
+	_Messdatum = TTeil(_filename,_txtpos-17,17); jjjjmmtt_hhmmss
+	_Sek_ = TTeil(_Messdatum,16,2)
+	_Sek=TzuEW(_Sek_,"e")
+	_Min_ = TTeil(_Messdatum,14,2)
+	_Min=TzuEW(_Min_,"e")
+	_Stun_ = TTeil(_Messdatum,12,2)
+	_Stun=TzuEW(_Stun_,"e")
+	_Tag_ = TTeil(_Messdatum,9,2)
+	_Tag=TzuEW(_Tag_,"e")
+	_Monat_ = TTeil(_Messdatum,6,2)
+	_Monat=TzuEW(_Monat_,"e")
+	_Jahr_ = TTeil(_Messdatum,1,4)
+	_Jahr=TzuEW(_Jahr_,"e")
+ende
+
+wenn 0
+	_Messdatum = TTeil(_filename,_txtpos-12,12);jjjjmmtthhmmss
+	
+	_Sek_ = "0";TTeil(_Messdatum,14,2)
+	_Sek=TzuEW(_Sek_,"e")
+	_Min_ = TTeil(_Messdatum,11,2)
+	_Min=TzuEW(_Min_,"e")
+	_Stun_ = TTeil(_Messdatum,9,2)
+	_Stun=TzuEW(_Stun_,"e")
+	_Tag_ = TTeil(_Messdatum,7,2)
+	_Tag=TzuEW(_Tag_,"e")
+	_Monat_ = TTeil(_Messdatum,5,2)
+	_Monat=TzuEW(_Monat_,"e")
+	_Jahr_ = TTeil(_Messdatum,1,4)
+	_Jahr=TzuEW(_Jahr_,"e")
+end
+_Messdatum_zahl=ZeitBinde(_Tag,_Monat,_Jahr,_Stun,_Min,_Sek)
+Date_string = _Jahr_+_Monat_+_Tag_+" "+_Stun_+":"+_Min_+":"+_Sek_
+<<<<<<< HEAD
+FileId = _Messdatum
+=======
+
+date_time_as_string = _Jahr_+_Monat_+_Tag_+"_"+_Stun_+_Min_+_Sek_
+filedate = _Messdatum_zahl
+>>>>>>> origin/master

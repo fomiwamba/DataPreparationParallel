@@ -1,0 +1,676 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;Sequenz zur Berechnung von FFT-Spektren
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Inputs
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sequenz imc_logging "fft_analysis started"
+
+_signalx = PA1; Gehï¿½use oder Wellenbahnsignal in X-Richtung
+;_signaly = PA8; Gehï¿½use oder Wellenbahnsignal in X-Richtung
+_peak = 	PA2; Drehfrequenz
+_windowlength = PA3;:windowlength	
+_windowfft = PA4;:windowfft[channelcount] ; 	-> Standard auf 2 <=> Hanning
+_overlap = PA5;:overlap[channelcount] ;		-> Standard auf 50%		
+_average = PA6;:average[channelcount] ;		-> Standard auf 1
+_reduction = 1;:reduction[channelcount] ;		-> Standardsmï¿½ï¿½ig auf 1 
+_env = PA7;
+;SonderMessung = 1
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Vorbereitung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+wenn _env = 0
+	_signalx = _signalx - mean(_signalx);
+	;_signaly = _signaly - mean(_signaly);
+ende
+_unit_signalx = einheit?(_signalx,1)
+xOFFSET _signalx 0
+xoffset _peak 0
+;xOFFSET _signaly 0
+
+
+wenn lang?(_peak)>2
+	sequenz SignaleGleichSetzen _signalx _peak
+	_signalx = _sig1
+	_peak = _sig2
+ende
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;Rechenteil
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+_T_fenster = _windowlength*xdel?(_signalx); Fensterbreite
+_deltaf = 1/_T_fenster; Abtastzeit
+_Fs = 1/xdel?(_signalx); Abtastfrequenz
+_Tgesamt = lang?(_signalx)*xdel?(_signalx); Gesamte Messdauer
+wenn _T_fenster > _Tgesamt
+	_T_fenster = _Tgesamt
+ende
+Fs = 1/xdel?(_signalx)
+Fmax = Fs/2.56
+_anzahl_it_mit_overlap = ganz((_Tgesamt-_overlap/100*_T_fenster)/(_T_fenster-_overlap/100*_T_fenster)); Anzahl der Iterationen mit Overlap-Fkt
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Zu berechnenden Spektren
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+_Ax_kask = leer; Amplitudenspektrum von Signalx
+_Px_kask = leer; Phasenspektrum von Signalx
+
+_cepstrum_kask = leer;
+_ALD_x_kask = leer; Autoleistungsdichtespektrum X
+_Power_Ax_kask = leer; Power spectrum
+_x_ow_kask = leer; Amplitude Halbwirbel
+_freq_x_ow_kask = leer; Frequenz Halbwirbel
+
+FFTV_A1X = leer
+FFTV_P1X = leer
+FFTV_A2X = leer
+FFTV_P2X = leer
+FFTV_A3X = leer
+FFTV_P3X = leer
+FFTV_A4X = leer
+FFTV_P4X = leer
+SumAll_kask = leer
+SubSynchronous_kask = leer
+Harmonics_kask = leer
+Synchronous_kask = leer
+NonSynchronous_kask = leer
+
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Zu berechnenden Vektorgrï¿½ï¿½en
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+_Ax_XX = 0*rampe(1,1,4)
+_Px_XX = 0*rampe(1,1,4)
+_Ax_XX_kask = leer; Drehharmonische Amplitude
+_Px_XX_kask = leer; Drehharmonische Phase
+_Ax_rest_kask = leer; Restwert
+_x_klirr_kask = leer; Klirrfaktor -> Harmonische Distortion
+HD_kask = leer; Total Harmonic Distortion
+
+_drehzahl_kask = leer;
+_Tmittel_kask = leer;
+
+_nn = 1;
+SOLANGE _nn <= _anzahl_it_mit_overlap 
+	
+	; Overlap theorie
+	;Tgesamt = _windowlength*Tfenster - (_windowlength-1)*Overlap*Tfenster
+	;Tbeginn = i*Tfenster - (i-1)*Overlap*Tfenster - Tfenster
+	;Tende = i*Tfenster - (i-1)*Overlap*Tfenster 
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;1) Zeitfenster Selektion
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if 1
+		_Tbeginn = (_nn-1)*_T_fenster-(_nn-1)*_overlap/100*_T_fenster
+		_Tende = _nn*_T_fenster-(_nn-1)*_overlap/100*_T_fenster;Tbeginn + T_fenster
+		_T_fenster_verifikation = _Tende-_Tbeginn
+		_N_beginn = floor(((_nn-1)-(_nn-1)*_overlap/100)*_windowlength);
+		_N_end = floor((_nn-(_nn-1)*_overlap/100)*_windowlength)-1
+		_Tmittel = (_Tende+_Tbeginn)/2
+		_Tmittel_kask = binde(_Tmittel_kask,_Tmittel)
+	
+		wenn _nn = 1
+			_x_g = grenindex(_signalx,(_nn-1)*_windowlength+1,_nn*_windowlength)
+			wenn lang?(_peak)>2 
+				_peak_g = grenindex(_peak,(_nn-1)*_windowlength+1,_nn*_windowlength)
+			ende
+		sonst 
+			_x_g = grenindex(_signalx,_N_beginn,_N_end)
+			wenn lang?(_peak)>2
+				_peak_g = grenindex(_peak,_N_beginn,_N_end)
+			ende
+		ende
+	ende
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;2) Drehzahl und Drehfrequenzbestimmung -> F0, Drehzahl
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	_F0_mitte = 0
+	wenn lang?(_peak)>2
+		_dp = diff(_peak_g)*xdel?(_peak_g)
+		_Tx = posiex(_dp,2); findet alle Zeiten, wo peak <= 0
+		_anz_peak = lang?(_Tx)
+		entf _dp
+		entf _Tx
+		
+		_Var = 2
+		sequenz Pulse2Speed _peak_g TrigLevel PulsPerRev 2
+		
+		_drehzahl_kask = binde(_drehzahl_kask,_drehzahl_mitte)
+		_F0_mitte = _drehzahl_mitte/60 
+	ende
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;4) Frequenzanalyse -> Amplitude und Phasenspektrum, Oil whirl amplitudde und Frequenz
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+	; search window_length = 2^n
+	for i = 12 to 20
+		_windowlength_ = 2^i
+		if _windowlength_ > _windowlength
+			_windowlength_ = 2^(i-1)
+			break
+		ende
+	ende
+
+	dft_spec = 0; 1-> wird dftspektrum benutzt, 0-> wird fft benutzt
+	wenn dft_spec = 0
+		_x_g = grenindex(_x_g,1,_windowlength_ )
+		wenn lang?(_peak)>2
+			_peak_g = grenindex(_peak_g,1,_windowlength_)
+		end
+	ende
+		
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;Magnitude Spectrum
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if dft_spec
+		_Ax_ = dftspectrum(_x_g-mitte(_x_g),_windowfft); langsamer aber genauere Auflösung
+		_Ax = _Ax_.b; kmp1(_Ax_)
+	else
+		if 1
+			fftoption _windowfft 0
+			_Ax_ = fft(_x_g-mitte(_x_g)); viel schneller
+			_Ax = _Ax_.b; kmp1(_Ax_)
+		else; build averaged spectrum
+			_overlap_ = 90
+			if 1
+				_nred = _windowlength_*xdel?(_x_g)/10; 
+				if _nred < 1
+					_nred_ = 1
+				end
+				if _nred >= 1
+					_nred_ = 2
+				end
+				if _nred > 2 
+					_nred_ = 2
+				end
+				if _nred > 4
+					_nred_ = 4
+				end
+				if _nred > 8
+					_nred_ = 8
+				end
+				if _nred > 16
+					_nred_ = 16
+				end
+				_nlen = _windowlength_/_nred_; = 4*4096; = _nlen = 10/xdel?(_x_g)
+			else
+				_nmin = 5/xdel?(_x_g)
+				for i = 12 to 20
+					_nlen = 2^i
+					if _nlen > _nmin
+						break
+					ende
+				ende
+			end
+			_Ax =AmpSpectrumRMS_1(_x_g,_nlen,_windowfft,_overlap_,1)
+		end
+	ende
+	
+	seteinheit(_Ax,_unit_signalx,1)
+	seteinheit(_Ax,"Hz",0)
+	_Ax_kask = binde(_Ax_kask,_Ax)
+	;seteinheit(_Ax_kask,_unit_signalx,1)
+	
+	unit = einheit? (_Ax, 1)
+	sequenz Create_EventData_STFT "Ax_event" _Ax unit
+	
+	if file_monitoring = 0 ; ->diagnosis
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		;Phase Spectrum
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		wenn lang?(_peak)>2
+			if dft_spec
+				_Px_t = kmp2(dftspectrum(_x_g-mitte(_x_g),_windowfft))
+				Px_peak_t = kmp2(dftspectrum(_peak_g-mitte(_x_g),_windowfft))
+				_px = _Px_t - Px_peak_t
+			else
+				if 0; build averaged spectrum
+					_overlap_ = 90
+					if 1
+						_nred = _windowlength_*xdel?(_x_g)/10; 
+						if _nred < 2
+							_nred_ = 1
+						end
+						if _nred > 2 
+							_nred_ = 2
+						end
+						if _nred > 4
+							_nred_ = 4
+						end
+						if _nred > 8
+							_nred_ = 8
+						end
+						if _nred > 16
+							_nred_ = 16
+						end
+						_nlen = _windowlength_/_nred_; = 4*4096; = _nlen = 10/xdel?(_x_g)
+					else
+						_nmin = 10/xdel?(_x_g)
+						for i = 13 to 20
+							_nlen = 2^i
+							if _nlen > _nmin
+								break
+							ende
+						ende
+					end
+					_px = kmp2(FrequencyResponse(_peak_g,_x_g-mitte(_x_g),_nlen,_windowfft,_overlap_,2));*inrad
+				else
+					_px = kmp2(FrequencyResponse(_peak_g,_x_g-mitte(_x_g),_windowlength_,_windowfft,_overlap,2));*inrad
+				end
+				
+				;		_px = kmp2(FrequencyResponse(_peak:[ii],_sigx:[ii],_length,_window,_overlap,2))
+				; Phasendifferenz zwischen X und Bezugssignal +180 -> ï¿½bereinstimmung mit lsq und fourieranalysator da peak nach unten zeigt
+			ende
+			if 1
+				;_px = PhaseContinuous(_px)
+				_px = PhaseMod( _px, "360" )
+			else
+				for _iip = 1 to lang?(_px)
+					if _px[_iip] <= 0 
+						_px[_iip] = 360 +  _px[_iip]
+					ende
+				ende		
+			ende
+			seteinheit(_Px,"Grad",1)
+			seteinheit(_Px,"Hz",0)
+			_Px_kask = binde(_Px_kask,_px)
+
+			wenn lang?(_peak)>2 and  varexist?("_Px")
+				unit = einheit? (_Px, 1)
+				sequenz Create_EventData_STFT "Px_event" _Px unit
+			ende
+			;seteinheit(_px_kask,"rad",1)
+		ende
+			
+
+		; ENBW: Rechteck: 1.0; Hamming: 1.3628257; Hanning: 1.5000000; Blackman-Harris: 2.0043528; Flat top:  3.7702901
+		if _windowfft = 0;Rechteck: 1.0
+			ENBW = 1
+		elseif _windowfft = 1 ; Hamming: 1.3628257
+			ENBW = 1.3628257
+		elseif _windowfft = 2; Hanning: 1.5000000
+			ENBW = 1.5
+		elseif _windowfft =3; Blackman: 1.7267573
+			ENBW = 1.7267573
+		elseif _windowfft = 4; Blackman-Harris: 2.0043528
+			ENBW = 2.0043528
+		elseif _windowfft = 5; Flat top:  3.7702901
+			ENBW = 3.7702901
+		ende
+		
+		wenn sues
+			;			test = 0
+			;			if test = 1
+			;				_overlap = 0
+			;				_windowfft = 2
+			;				_windowlength_ = lang?(S106)
+			;				_windowlength_ = 2^14
+			;				_win100 = _windowlength_
+			;				_x_g = grenindex(S106,1,_windowlength_ )
+			;				_y_g = grenindex(S107,1,_windowlength_ )
+			;				
+			;				_Ax_ = dftspectrum(_x_g-mitte(_x_g),_windowfft)
+			;				_Ay_ = dftspectrum(_y_g-mitte(_y_g),_windowfft)
+			;
+			;				PowerSpecx = _Ax_*_Ax_ ;-> Gxx
+			;				PowerSpecy = _Ay_*_Ay_ ;-> Gyy
+			;				CrossPowerSpecxy = _Ax_*_Ay_/(ENBW*xdel?(_Ax_)) ;-> Gxy
+			;				CrossPowerSpecyx = _Ay_*_Ax_/(ENBW*xdel?(_Ax_)) ;-> Gxy
+			;			
+			;				PowerSpecx_ = PowerSpectrum(_x_g,_windowlength_,_windowfft,_overlap,1,0)
+			;				PowerSpecy_ = PowerSpectrum(_y_g,_windowlength_,_windowfft,_overlap,1,0)
+			;				CrossPowerSpecxy_ =CrossPowerDS(_x_g,_y_g,_windowlength_,_windowfft,_overlap,1,0)
+			;				CrossPowerSpecyx_ =CrossPowerDS(_y_g,_x_g,_windowlength_,_windowfft,_overlap,1,0)
+			;				; so passt alles zusammen.
+			;			ende
+			
+			if txarraygetsize(ch_psd_par_liste) > 0
+				;%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				;PSD or ALD Spectrum
+				;%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				if dft_spec
+					;_ALD_x = _Ax_*_Ax_/(ENBW*xdel?(_Ax_))
+					_ALD_x = _Ax_.b*_Ax_.b/(ENBW*xdel?(_Ax_))
+				else
+					if 0; build averaged spectrum
+						_overlap_ = 90
+						if 1
+							_nred = _windowlength_*xdel?(_x_g)/10; 
+							if _nred < 1
+								_nred_ = 1
+							end
+							if _nred >=1
+								_nred_ = 2
+							end
+							if _nred > 4
+								_nred_ = 4
+							end
+							if _nred > 8
+								_nred_ = 8
+							end
+							if _nred > 16
+								_nred_ = 16
+							end
+							_nlen = _windowlength_/_nred_; = 4*4096; = _nlen = 10/xdel?(_x_g)
+						else
+							_nmin = 10/xdel?(_x_g)
+							for i = 13 to 20
+								_nlen = 2^i
+								if _nlen > _nmin
+									break
+								ende
+							ende
+						end
+						_ALD_x = PowerDS(_x_g,_nlen,_windowfft,_overlap_,1,0)
+					else
+						_ALD_x = PowerDS(_x_g,_windowlength_,_windowfft,_overlap,1,0);_average_neu, _windowfft = FlatTop = 5 for ALD
+					end
+					_ALD_x = _ALD_x:[1]
+				ende
+				;_ALD_x = db(_ALD_x)
+				_ALD_x_kask = binde(_ALD_x_kask,_ALD_x)	
+				seteinheit(_ALD_x_kask,einheit?(_ALD_x,1),1)
+
+				wenn sues and  varexist?("_ALD_x")
+					unit = einheit? (_ALD_x, 1)
+					sequenz Create_EventData_STFT "ALDx_event" _ALD_x unit
+				ende
+			ende
+			
+			;			wenn 0
+			;				if dft_spec
+			;					_Power_Ax = _Ax_*_Ax_
+			;					CrossPowerSpecxy = _Ax_*_Ay_/(ENBW*xdel?(_Ax_)) ;-> Gxy
+			;					rossPowerSpecyx = _Ay_*_Ax_/(ENBW*xdel?(_Ax_)) ;-> Gxy
+			;				else
+			;					_Power_Ax = PowerSpectrum(_x_g,_windowlength_,_windowfft,_overlap,1,0)
+			;					CrossPowerSpecxy_ =CrossPowerDS(_x_g,_y_g,_windowlength_,_windowfft,_overlap,1,0)
+			;					CrossPowerSpecyx_ =CrossPowerDS(_y_g,_x_g,_windowlength_,_windowfft,_overlap,1,0)
+			;				ende
+			;				_Power_Ax_kask = binde(_Power_Ax_kask,_Power_Ax)
+			;				_unit_Power_Ax = einheit?(_Power_Ax,1)
+			;				seteinheit(_Power_Ax_kask,_unit_Power_Ax,1)
+			;
+			;				_x_g = grenindex(_x_g,1,_windowlength_ )
+			;				_Cepstrum = PowerCepstrum_1(_x_g,lang?(_x_g),_windowfft,0,1); Gemitteltes Kepstrum
+			;				seteinheit(_Cepstrum,_unit_signalx,1)	
+			;				_Cepstrum_kask = binde(_Cepstrum_kask,_cepstrum)
+			;			ende
+
+		ende
+		
+	ende
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; electrical analyse -> Total Harmonic Distortion
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+	if file_monitoring = 0 ; ->diagnosis
+		sequenz search_item Asset_Props:Name "LineFrequency"
+		freqline_Hz_np = tzuew (Asset_Props:Val[search_index],"a")
+		;zeigen freqline_Hz_np
+	
+		freqline = 50
+		if freqline_Hz_np = 0 or freqline_Hz_np <= 50;or tverg(freqline_Hz_np, "") = 0 
+			freqline = 50
+		ende
+		if freqline_Hz_np = 60 
+			freqline = 60
+		ende
+		;zeigen freqline
+	
+		N_harm  = 20
+		HD_all = 0
+		Nlines = lang?(_Ax)
+		Fmax = lang?(_Ax)*xdel?(_Ax)
+		wenn lang?(_Ax)>0 and Fmax >= 1000
+			v = leer;
+		
+			_jj = 1
+			SOLANGE _jj <= N_harm 
+				_fu = _jj*freqline-2*xdel?(_Ax)
+				_fo = _jj*freqline+2*xdel?(_Ax)
+				v = binde(v,max(gren(_Ax,_fu,_fo)))
+				_jj = _jj + 1
+			ENDE
+
+			_jj = 2
+			v_thd_all = 0
+			SOLANGE _jj <= N_harm 
+				;v_thd_all = v_thd_all + v[_jj]^2
+				v_thd_all = v_thd_all + v[_jj]^2
+				_jj = _jj + 1
+			ENDE
+			;HD_all = sqrt(v_thd_all)/v[1]^2*100; 
+			HD_all = v_thd_all
+		ende
+		HD_kask = binde(HD_kask,HD_all)
+	end
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;5) Vektoranalyse -> Amplitude und Phase der Vielfachen der Drehfrequenz, Klirrfaktor
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+	if file_monitoring = 0 ; ->diagnosis
+		_deltaf = xdel?(_Ax); Frequenzlinienabstand
+		_anz_freq_linien = lang?(_Ax); Anzahl der Frequenzlinï¿½en
+			
+		
+		wenn lang?(_peak)>2 and _F0_mitte <> 0 and _anz_freq_linien > 800
+			_iii = 1
+			solange _iii <= lang?(_Ax_XX)
+				_Fo = _iii*_F0_mitte+3*_deltaf
+				_Fu = _iii*_F0_mitte-3*_deltaf
+				;_spect_x_ = wurz(2)*gren(kmp1(fft(_signalx)),_Fu,_F0); Amplitudespektrum fuer X
+				_spect_x = gren(_Ax,_Fu,_Fo); Amplitudespektrum fuer X
+				_fpos = posi(_spect_x,max(_spect_x))
+				_Ax_XX[_iii] = wert(_Ax,_fpos); 
+				_Px_XX[_iii] = wert(_px,_fpos)
+				
+				wenn _iii = 1
+					FFTV_A1X = binde(FFTV_A1X,_Ax_XX[_iii])
+					FFTV_P1X = binde(FFTV_P1X,_Px_XX[_iii])
+				ende
+				wenn _iii = 2
+					FFTV_A2X = binde(FFTV_A2X,_Ax_XX[_iii])
+					FFTV_P2X = binde(FFTV_P2X,_Px_XX[_iii])
+				ende
+				wenn _iii = 3
+					FFTV_A3X = binde(FFTV_A3X,_Ax_XX[_iii])
+					FFTV_P3X = binde(FFTV_P3X,_Px_XX[_iii])
+				ende
+				wenn _iii = 4
+					FFTV_A4X = binde(FFTV_A4X,_Ax_XX[_iii])
+					FFTV_P4X = binde(FFTV_P4X,_Px_XX[_iii])
+				ende
+				_iii = _iii + 1
+			ende
+			
+
+			_spect_x = gren(_Ax,0,Fmax); Amplitudespektrum fuer X		
+			SumAll = sum(_spect_x)
+			SumAll_kask = binde(SumAll_kask, SumAll)
+				
+			_F0min = _F0_mitte - 3*xdel?(_Ax)
+			_spect_x = gren(_Ax,0,_F0min); Amplitudespektrum fuer X
+			SubSynchronous = sum(_spect_x)
+			SubSynchronous_kask =  binde(SubSynchronous_kask, SubSynchronous);
+				
+			_anz_harmonics = Fmax/_F0_mitte
+			_qq = 1
+			Harmonics = 0
+			Synchronous = 0
+			solange _qq <= _anz_harmonics
+				_parname = "FFTE_" + tform(_qq,"") + "X"
+				_F0min = _qq * _F0_mitte - 3*xdel?(_Ax)
+				_F0max = _qq * _F0_mitte + 3*xdel?(_Ax)
+				_spect_x_f0 = gren(_Ax,_F0min,_F0max); Amplitudespektrum fuer X
+				if _qq <= 8
+					Harmonics = Harmonics + max(_spect_x_f0);
+				ende
+				Synchronous = Synchronous + max(_spect_x_f0);
+		
+				_qq = _qq +1
+			ende
+			Harmonics_kask = binde(Harmonics_kask, Harmonics)
+			Synchronous_kask = binde(Synchronous_kask, Synchronous)
+			NonSynchronous = SumAll - SubSynchronous - Synchronous
+			if NonSynchronous <0
+				NonSynchronous =0
+			ende
+			NonSynchronous_kask = binde(NonSynchronous_kask, NonSynchronous) 
+			
+			wenn 1 ; Oil whirl -> Amplitude und Frequenz des Oil whirl
+				_fu = 0.41*_F0_mitte
+				_fo = 0.49*_F0_mitte
+				_spect_x = gren(_Ax,_fu,_fo); Oil whir
+				;		ENBW_hamming = 1.37, 	ENBW_blackmanharis = 1.71; ENBW_rechteck = 1.0; ENBW_flattop = 2.96
+				;		_e_freq_a = 1/wurz(2)*wurz(1/ENBW_hanning*sum((_spect_x)^2)); laut Metravib -> ;Monitoring of machines, Chapter 4	
+				_rms_x_ow = wurz(1/ENBW*sum((_spect_x)^2)); laut Metravib -> ;Monitoring of machines, Chapter 4 bei Hanning fenster; 1/wurz(2)*
+				_mag_x_ow = max(_spect_x); 
+				_freq_x_ow = posi(_spect_x,_mag_x_ow)
+			ende
+			
+		sonst
+			FFTV_A1X = binde(FFTV_A1X,0)
+			FFTV_P1X = binde(FFTV_P1X,0)
+			FFTV_A2X = binde(FFTV_A2X,0)
+			FFTV_P2X = binde(FFTV_P2X,0)
+			FFTV_A3X = binde(FFTV_A3X,0)
+			FFTV_P3X = binde(FFTV_P3X,0)
+			FFTV_A4X = binde(FFTV_A4X,0)
+			FFTV_P4X = binde(FFTV_P4X,0)
+
+			_spect_x = gren(_Ax,0,Fmax); Amplitudespektrum fuer X		
+			SumAll = sum(_spect_x)
+			SumAll_kask = binde(SumAll_kask, SumAll)
+
+			SubSynchronous_kask =  binde(SubSynchronous_kask, 0);
+				
+			Harmonics_kask = binde(Harmonics_kask, 0)
+			Synchronous_kask = binde(Synchronous_kask, 0)
+			NonSynchronous_kask = binde(NonSynchronous_kask, 0) 
+			wenn 1 ; Oil whirl -> Amplitude und Frequenz des Oil whirl
+				_rms_x_ow = 0
+				_mag_x_ow = 0
+				_freq_x_ow = 0
+			ende
+		ende
+		_x_ow_kask = binde(_x_ow_kask,_rms_x_ow)
+		;_x_ow_kask = binde(_x_ow_kask,_mag_x_ow_ow)
+		_freq_x_ow_kask = binde(_freq_x_ow_kask,_freq_x_ow)
+		seteinheit(_x_ow_kask,_unit_signalx,1)
+		seteinheit(_freq_x_ow_kask,"Hz",1)
+	end
+	_nn = _nn + 1
+ENDE
+
+entf delme_*
+
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Segmentierung der Feature zur Matrixbildung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+; Gruppierung der Feature zur Trendbildung
+if _env = 0
+	Feature:Ax = Ax_event
+else 	
+	Feature:Ax_env = Ax_event
+end
+
+SetSegLang(_Ax_kask,lang?(_Ax))
+wfft = _windowfft; DlgGetSelectedItem("Window")
+sequenz FreqEnergieSchnitt_FFT _Ax_kask 0 Fmax "FFTE_All"
+sequenz FreqEnergieSchnitt_FFT _Ax_kask 0 10 "FFTE_LF"
+sequenz FreqEnergieSchnitt_FFT _Ax_kask 10 1000 "FFTE_ISO"
+wenn Fmax > 1000
+	sequenz FreqEnergieSchnitt_FFT _Ax_kask 1000 Fmax "FFTE_HF"
+end
+	
+if file_monitoring = 0 ; ->diagnosis
+	wenn lang?(_peak)>2
+		Feature:Px = Px_event
+		SetSegLang(_Px_kask,lang?(_px))
+	ende
+	wenn sues and  varexist?("_ALD_x")
+		Feature:ALDx = ALDx_event
+		SetSegLang(_ALD_x_kask,lang?(_ALD_x))
+	ende
+		
+	Feature:drehzahlx = _drehzahl_kask
+	Ch_Config:Zeitfensterbreite = _T_fenster
+	Ch_Config:overlap_fft = _overlap
+	Ch_Config:Gesamtfenster = _Tgesamt
+	Ch_Config:Iterationen = _anzahl_it_mit_overlap
+	Feature:Tmittel_zk = _Tmittel_kask
+	Feature:drehzahl = _drehzahl_kask
+		
+	
+	Feature:SumAll = SumAll_kask;
+	Feature:SubSynchronous = SubSynchronous_kask
+	Feature:Harmonics = Harmonics_kask
+	Feature:Synchronous = Synchronous_kask
+	Feature:NonSynchronous = NonSynchronous_kask
+	Feature:TH =HD_kask
+	Feature:Eow =_x_ow_kask
+	Feature:Fow =_freq_x_ow_kask
+	
+	Feature:FFTV_A1X = FFTV_A1X
+	Feature:FFTV_P1X = FFTV_P1X
+	Feature:FFTV_A2X = FFTV_A2X
+	Feature:FFTV_P2X = FFTV_P2X
+	Feature:FFTV_A3X = FFTV_A3X
+	Feature:FFTV_P3X = FFTV_P3X
+	Feature:FFTV_A4X = FFTV_A4X
+	Feature:FFTV_P4X = FFTV_P4X
+
+	
+	if sues
+		if txarraygetsize(ch_fft_par_liste) > 0 and lang?(_Ax_kask) > 1  and lang?(_Px_kask) > 1  
+			for _pari = 1 to txarraygetsize(ch_fft_par_liste)
+				_pari_name = ch_fft_par_liste[_pari]
+				_pari_name_parts = txsplit(_pari_name,"_")
+				_pari_name_spec@freq = txsplit(_pari_name_parts[2],"@")
+				if txarraygetsize(_pari_name_parts) = 2; extraction narrowband energy values
+					_pari_name_spec@freq = txsplit(_pari_name_parts[2],"@")
+					_pari_name_sigx = _pari_name_parts[1]
+					_pari_name_spec = _pari_name_spec@freq [1]
+					_pari_name_freq = _pari_name_spec@freq [2]
+					sequenz FreqValueSchnitt_FFT _Ax_kask _Px_kask 0 _pari_name_freq _pari_name_spec
+				end
+				if txarraygetsize(_pari_name_parts) = 3; extraction broadband energy values
+					_pari_name_sigx = _pari_name_parts[1]
+					_pari_name_spec = _pari_name_spec@freq [1]+"_rms_"+_pari_name_spec@freq [2] +"_" +_pari_name_parts[3] ; --> _spetrum_name + "_f1" + "_f2"
+					_pari_name_freq1 = tzuew(_pari_name_spec@freq [2],"f")/1000
+					_pari_name_freq2 =  tzuew(_pari_name_parts [3],"f")/1000
+					sequenz FreqEnergieSchnitt_FFT _Ax_kask _pari_name_freq1 _pari_name_freq2 _pari_name_spec
+				end
+			end
+		ende
+		if txarraygetsize(ch_psd_par_liste) > 0 and lang?(_ALD_x_kask) > 1
+			for _pari = 1 to txarraygetsize(ch_psd_par_liste)
+				_pari_name = ch_psd_par_liste[_pari]
+				_pari_name_parts = txsplit(_pari_name,"_")
+				_pari_name_spec@freq = txsplit(_pari_name_parts[2],"@")
+				if txarraygetsize(_pari_name_parts) = 2; extraction narrowband energy values
+					_pari_name_spec@freq = txsplit(_pari_name_parts[2],"@")
+					_pari_name_sigx = _pari_name_parts[1]
+					_pari_name_spec = _pari_name_spec@freq [1]
+					_pari_name_freq = _pari_name_spec@freq [2]
+					;if tverg(_pari_name_sigx,_chx) = 0 
+					sequenz FreqValueSchnitt_FFT _ALD_x_kask 0 0 _pari_name_freq _pari_name_spec
+					;end
+				ende
+			end
+		ende
+	ende
+ende
+
+
+

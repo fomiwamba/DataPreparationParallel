@@ -1,0 +1,911 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<imc.Document.Formular Version="1.1">
+  <DesignEnv VirtualScreen="{X=0,Y=0,Width=3840,Height=2160}" DpI="{Width=144, Height=144}" ReportZoom="1" />
+  <_psn_ type="imc.Famos.DataBrowser.BrowserPanel" assembly="imc.Famos.DataBrowser" main="0" sub="0">
+    <style index="0" />
+    <ps margins="100, 100, 100, 100" landscape="false" />
+    <layout />
+    <scripts>
+      <script guid="08294d5b-6994-4492-89e2-eaa8acb6e5b1" fmt="FamosSequence" size="30">RABiAEMAbABvAHMAZQBQAGEAbgBlAGwAKAAwACkA</script>
+      <script guid="b704832b-8569-48ff-9e9a-5e3af034eaac" fmt="FamosSequence" size="54">cwBlAHEAdQBlAG4AegAgAEkAbgBpAHQARABhAHQAYQBQAHIAZQBwAGEAcgBhAHQAaQBvAG4A</script>
+    </scripts>
+    <propertybags>
+      <propertybag name="Famos" version="1">
+        <category name="Startup">
+          <prop name="Float" value="False" />
+          <prop name="FloatStartupPos" value="Center,0,0,0" />
+          <prop name="AutoAdjustment" value="None" />
+          <prop name="HideBars" value="" />
+          <prop name="ModalDialog" value="True" />
+          <prop name="ModalDialogSettings" value="" />
+          <prop name="CaptionText" value="" />
+        </category>
+      </propertybag>
+    </propertybags>
+    <_psn_ type="imc.Common.Controls.ImcPanel.CimcPanelPage" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+      <base title="Seite 1" name="CimcPanelPage" tag="" />
+      <template v="1" h="1" sealed="False" gmode="eDashboard" gridsize="10" gridcolor="-9868951" showgrid="True" snaptogrid="False" solidbackcolor="True" enableprint="True" bgdcolor="ButtonHighlight" />
+      <ps psize="2101, 2969" pkind="9" landscape="false" margins="200, 100, 100, 100" />
+      <ReportTemplate />
+      <BackgroundImageLayout>None</BackgroundImageLayout>
+      <SkinKey>Blue skin</SkinKey>
+      <PageSize>1700;1500</PageSize>
+      <pos bounds="0; 0; 29986; 26458" />
+      <sheet index0="0" index1="0">
+        <_psn_ type="imc.Common.Controls.ImcPanel.CimcPanelSheet" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+          <pos bounds="0; 0; 29986; 26458" />
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="ChannelPuls" />
+            <pos bounds="1887; 25806; 4957; 494" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcStaticComboBoxWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+              <script guid="5051f595-19a5-4a5e-8f00-cc4563504516" fmt="FamosSequence" size="50">cwBlAHEAdQBlAG4AegAgAFMAZQBsAGUAYwB0AEEAcwBzAGUAdABGAG8AbABkAGUAcgA=</script>
+              <text />
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="ChannelY" />
+            <pos bounds="1896; 25259; 4957; 494" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcStaticComboBoxWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+              <script guid="5051f595-19a5-4a5e-8f00-cc4563504516" fmt="FamosSequence" size="50">cwBlAHEAdQBlAG4AegAgAFMAZQBsAGUAYwB0AEEAcwBzAGUAdABGAG8AbABkAGUAcgA=</script>
+              <text />
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="ChannelX" />
+            <pos bounds="1923; 24677; 4957; 494" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcStaticComboBoxWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+              <script guid="5051f595-19a5-4a5e-8f00-cc4563504516" fmt="FamosSequence" size="50">cwBlAHEAdQBlAG4AegAgAFMAZQBsAGUAYwB0AEEAcwBzAGUAdABGAG8AbABkAGUAcgA=</script>
+              <text />
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="FeatureList" />
+            <pos bounds="7056; 7373; 3404; 18927" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSimpleListWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0" />
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="ChannelList" />
+            <pos bounds="176; 18556; 6756; 5927" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSimpleListWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0" />
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="FileList" />
+            <pos bounds="194; 7373; 6756; 10195" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSimpleListWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0" />
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="AssetFolderList" />
+            <pos bounds="176; 1023; 6526; 494" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcStaticComboBoxWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+              <script guid="5051f595-19a5-4a5e-8f00-cc4563504516" fmt="FamosSequence" size="50">cwBlAHEAdQBlAG4AegAgAFMAZQBsAGUAYwB0AEEAcwBzAGUAdABGAG8AbABkAGUAcgA=</script>
+              <text>D:\Projekte\Paimboeuf_data</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="FileNo" />
+            <pos bounds="10566; 6791; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>1</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label57" />
+            <pos bounds="22648; 6791; 600; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Center" />
+              <text>of</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="StartFeatureExtraction" />
+            <pos bounds="159; 3351; 6544; 706" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSimpleButtonWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+<<<<<<< HEAD
+              <script guid="23440061-eaa9-4ed8-8803-2ded0db23d42" fmt="FamosSequence" size="610">OwBpAGYAIAAwAA0ACgA7AAkAcwBlAHEAdQBlAG4AegAgAFAAcgBvAGMAZQBzAHMAQQBsAGwARgBpAGwAZQBzAA0ACgA7AGUAbABzAGUADQAKADsACQA7AHMAZQBxAHUAZQBuAHoAIABQAHIAbwBjAGUAcwBzAEEAbABsAEYAaQBsAGUAcwBfAFMAaQBwAGwAdQBnAEMADQAKADsACQBzAGUAcQB1AGUAbgB6ACAAUAByAG8AYwBlAHMAcwBBAGwAbABGAGkAbABlAHMAXwBQAGEAcgBhAGwAbABlAGwAUAByAG8AYwBlAHMAcwBpAG4AZwANAAoAOwBlAG4AZAANAAoAOwANAAoAOwBpAGYAIAB0AHgAYQByAHIAYQB5AGcAZQB0AHMAaQB6AGUAKABDAGgAXwBDAG8AbgBmAGkAZwA6AFMAaQBnAE4AYQBtAGUAKQAgAD4AIAA4AA0ACgA7AAkAcwBlAHEAdQBlAG4AegAgAFAAcgBvAGMAZQBzAHMAQQBsAGwARgBpAGwAZQBzAF8AUABhAHIAYQBsAGwAZQBsAFAAcgBvAGMAZQBzAHMAaQBuAGcADQAKADsAZQBsAHMAZQANAAoAOwAJAHMAZQBxAHUAZQBuAHoAIABQAHIAbwBjAGUAcwBzAEEAbABsAEYAaQBsAGUAcwANAAoAOwBlAG4AZAANAAoADQAKAHMAZQBxAHUAZQBuAHoAIABQAHIAbwBjAGUAcwBzAEEAbABsAEYAaQBsAGUAcwBfAFAAYQByAGEAbABsAGUAbABQAHIAbwBjAGUAcwBzAGkAbgBnAA==</script>
+=======
+              <script guid="23440061-eaa9-4ed8-8803-2ded0db23d42" fmt="FamosSequence" size="242">aQBmACAAMQANAAoACQBzAGUAcQB1AGUAbgB6ACAAUAByAG8AYwBlAHMAcwBBAGwAbABGAGkAbABlAHMADQAKAGUAbABzAGUADQAKAAkAOwBzAGUAcQB1AGUAbgB6ACAAUAByAG8AYwBlAHMAcwBBAGwAbABGAGkAbABlAHMAXwBTAGkAcABsAHUAZwBDAA0ACgAJAHMAZQBxAHUAZQBuAHoAIABQAHIAbwBjAGUAcwBzAEEAbABsAEYAaQBsAGUAcwBfAFAAYQByAGEAbABsAGUAbABQAHIAbwBjAGUAcwBzAGkAbgBnAA0ACgBlAG4AZAA=</script>
+>>>>>>> origin/master
+              <text>Start Feature Extraction</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="DateTo" />
+            <pos bounds="3563; 2646; 3157; 494" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcDateTimeWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+              <appearance bg_color="" border="7" />
+              <behaviour format="G2" calendar="-1" ro="False" />
+<<<<<<< HEAD
+              <value>638129068090000000</value>
+=======
+              <value>638118887680000000</value>
+>>>>>>> origin/master
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="DateFrom" />
+            <pos bounds="194; 2646; 3210; 494" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcDateTimeWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+              <appearance bg_color="" border="7" />
+              <behaviour format="G2" calendar="-1" ro="False" />
+              <value>633979008000000000</value>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label3" />
+            <pos bounds="3598; 1923; 3087; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" />
+              <text>To</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label2" />
+            <pos bounds="194; 1923; 3122; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" />
+              <text>From</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Image2" />
+            <pos bounds="24659; 53; 5327; 1870" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcPictureBoxWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+              <style linkable="False" />
+              <styles border="None" sizemode="StretchImage" />
+              <appearance bgcolor="ControlLight" />
+              <image size="11821">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Fn9m0myjgU/ffq7+7MeTWvXFXxLqaLY66NBU9XuFFFFcp0BRRRQAUUUUAFFFFABRRRQAUUUUAFeE3v8Ax/3P/XVv517tXhN7/wAf9z/11b+deTmvwx+Z9DkHxVPl+p0fw9/5GV/+vdv5ivU68s+Hv/Iyv/17t/MV6nW+W/wPmcmdf70/RBRRRXeeSFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFIUVuqg/UUtFADPKj/55p/3yKcAAMAYpaKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigApCqt1UH6ilooAZ5MX/ADzT/vkU4Kq9FA+gpaKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK8Jvf+P8Auf8Arq38692rwm9/4/7n/rq3868nNfhj8z6HIPiqfL9To/h7/wAjK/8A17t/MV6nXlnw9/5GV/8Ar3b+Yr1Ot8t/gfM5M6/3p+iCiiiu88kKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACvCb3/j/ALn/AK6t/Ovdq8Jvf+P+5/66t/OvJzX4Y/M+hyD4qny/U6P4e/8AIyv/ANe7fzFep15Z8Pf+Rlf/AK92/mK9TrfLf4HzOTOv96fogooorvPJCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArza4+HuqS3U0q3NqFdywyW7n6V6TRWFbDwrWU+h1YXGVcM26fU4zwt4RvtE1dru5mgdDEUxGTnJI9RXZ0UVVKlGlHljsRiMRPET56m4UUUVqYBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAf/2Q==</image>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Step" />
+            <pos bounds="25277; 6791; 4392; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+<<<<<<< HEAD
+              <text>Export Channel List</text>
+=======
+              <text>Load Measurement File</text>
+>>>>>>> origin/master
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label56" />
+            <pos bounds="25277; 6262; 4374; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Center" />
+              <text>Data Processing Step</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Chs" />
+            <pos bounds="23266; 6791; 1746; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>6</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label55" />
+            <pos bounds="23283; 6279; 1711; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Center" />
+              <text>#Channels</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="ChNo" />
+            <pos bounds="21043; 6791; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>3</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label54" />
+            <pos bounds="21061; 6279; 1499; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Center" />
+              <text>ChNo.</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Unit" />
+            <pos bounds="19103; 6791; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>m/s^2</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label53" />
+            <pos bounds="19121; 6297; 1499; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Center" />
+              <text>ChUnit</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Channel" />
+            <pos bounds="14658; 6791; 4180; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>Ch002</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label52" />
+            <pos bounds="14676; 6262; 4057; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Center" />
+              <text>ChName</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label51" />
+            <pos bounds="12224; 6791; 600; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Center" />
+              <text>of</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Files" />
+            <pos bounds="12788; 6791; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+<<<<<<< HEAD
+              <text>10</text>
+=======
+              <text>2</text>
+>>>>>>> origin/master
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label50" />
+            <pos bounds="12806; 6279; 1499; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Center" />
+              <text>#Files</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label49" />
+            <pos bounds="10619; 6279; 1499; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Center" />
+              <text>FileNo.</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="plot1" />
+            <pos bounds="10566; 7426; 19173; 18891" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcCurveWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <style linked="False" />
+              <styles border="Auto" />
+              <ccv size="879">SUljdhIAAwCAAQaBEAEFgAQEgBkIjj8EAAAvBAAACAAIAOYHFgKCBQBAS4gPAABwCAAAcAgCiA8AAKUCAAB9AQSBAZAChEZhbW9zeoACBoHQBwW23NzcAOXl5QCfn58A9/f3AKioqADLy8sAADeAAFpaWgDl5eUAWlpaAJaWlgD39/cAAEaHAOXl5UGdRocA2gBGAP+gSwBLcP8AAMD/AADAUAD/AP8AYO2QBYOAgAD/AoCAAq6AgIAAgACAAACAAAD//+AA/7CwAD8ATADQsP8A/5AAAND/rwDQ5RkAwABFAKioqCSAGBaD7P///wuBkAEFiAMCASJBcmlhbBqD9v///wuBkAEFiAMCASJBcmlhbBqD9v///wuBkAEFiAMCASJBcmlhbBqAZAKAUAKAUH8Wov///wD///8AWlpaAFpaWgDLy8sA5eXlAAA3gABaWloA////ApCAAFpaWgBaWloAAEaHAP///0GdRocA2gBGAADA/wD/AP8AAHD/ABGAAAD/YAAAS/+QBYeAgAD/ADsAgAKdgICAAIAAgAAATAcA/OkAAP+wsAA/AEwA0LD/AP+wAo3/wADf5RkAwABFALm5uSCAAQKAGBaD9v///wuBkAEFiAMCASJBcmlhbBqD9v///wuBkAEFiAMCASJBcmlhbBqD9v///wuBkAEFiAMCASJBcmlhbBqAUAKAUAKAUH8WmP//////////6AMAAOgDAAD//////////wMCgAUCgAECgAECgAECgMgCg9j///8LgZABBYgDAgEiQXJpYWwagB4CgBR/fxqAyAKELAEAAKACg+D///8LgZABBYgDAgEiQXJpYWwagAF/fyqAAwaBQDMFgWAcCYABEIHwPz+AAX9/f39/f39/f39/f39/f06AARqAAn9/f39/f39/f39/f39/f39/f39/f39/f39+gAJ/f39/f39/f39/SoABDoABXoABf39WgAF/f2aAARqAAhqAARqAAhqAARqAAhqAAn9/f39/f39/f39/f39/ZosBAQEBAQEBAQEBAQEOgwEBAQFEgBB/f1ILgAF/f38SgBICgAoCgBkCgAp/f39/f39/I4AQKYAaGIHwPxuAB39/f3KAAQKM/v////7////+////QAKD/v///39/f39/e4ABf3KABAeAAgV/f39/</ccv>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label47" />
+            <pos bounds="167; 17912; 1923; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Left" />
+              <text>ChannelList</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label46" />
+            <pos bounds="7082; 6747; 1923; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Left" />
+              <text>FeatureList</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label45" />
+            <pos bounds="167; 6712; 1923; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Left" />
+              <text>FileList</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label44" />
+            <pos bounds="229; 25735; 1552; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>ChannelPuls</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label43" />
+            <pos bounds="229; 25241; 1552; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>ChannelY</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label42" />
+            <pos bounds="318; 24659; 1464; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>ChannelX</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="File" />
+            <pos bounds="12188; 5786; 17480; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+<<<<<<< HEAD
+              <text>AMU_192.168.0.1_A_OC1_EventFile_20230221_212422</text>
+=======
+              <text>AMU_10.201.161.151_C_OC3_Partial Load 3_eventfile_20161031_232753</text>
+>>>>>>> origin/master
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label39" />
+            <pos bounds="10583; 5733; 1499; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>FileName</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="TPF" />
+            <pos bounds="25206; 4128; 1817; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>500</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="BPFo" />
+            <pos bounds="25206; 3598; 1817; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>10000</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="BPFu" />
+            <pos bounds="25206; 3069; 1817; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>1000</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="EnvType" />
+            <pos bounds="25206; 2540; 1834; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>Rectification</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Envelope" />
+            <pos bounds="25206; 1993; 1834; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>OFF</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label38" />
+            <pos bounds="23495; 4039; 1676; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>TPF_Env</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label37" />
+            <pos bounds="23513; 3510; 1658; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>BPFo_Env</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label36" />
+            <pos bounds="23495; 3069; 1676; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>BPFu_Env</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label35" />
+            <pos bounds="23513; 2540; 1658; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>Env_Type</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label34" />
+            <pos bounds="23530; 1993; 1640; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>Envelope</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Order" />
+            <pos bounds="22313; 4128; 1164; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>OFF</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="fft" />
+            <pos bounds="22313; 3598; 1164; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>ON</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Orbit" />
+            <pos bounds="22331; 3069; 1147; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>OFF</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Time" />
+            <pos bounds="22313; 2540; 1164; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>ON</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label31" />
+            <pos bounds="20267; 4039; 1976; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>OrderAnalysis</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label30" />
+            <pos bounds="20214; 3510; 2028; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>FFTAnalysis</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label29" />
+            <pos bounds="20249; 3069; 1993; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>OrbitAnalysis</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label28" />
+            <pos bounds="20232; 2540; 2011; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>TimeAnalysis</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="NoA" />
+            <pos bounds="18609; 4132; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>13</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="DeltaO" />
+            <pos bounds="18609; 3603; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>0.05</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Omax" />
+            <pos bounds="18609; 3073; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>256</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="NoR" />
+            <pos bounds="18609; 2540; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>20</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Averages" />
+            <pos bounds="18609; 1993; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>9</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="DeltaF" />
+            <pos bounds="18609; 1482; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>0.15625</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Length" />
+            <pos bounds="18609; 974; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>32768</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label24" />
+            <pos bounds="16810; 4039; 1764; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>NoA_order</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label23" />
+            <pos bounds="16792; 3510; 1782; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>DeltaO</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label22" />
+            <pos bounds="16810; 3069; 1764; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>Omax</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label21" />
+            <pos bounds="16828; 2540; 1746; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>NoR</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label20" />
+            <pos bounds="17039; 1993; 1535; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>NoA_FFT</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label19" />
+            <pos bounds="16933; 1482; 1640; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>DeltaF(Hz)</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label18" />
+            <pos bounds="16845; 970; 1729; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>WindowLength</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="SpR" />
+            <pos bounds="15117; 4128; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>512</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="PulsPerRev" />
+            <pos bounds="15117; 3598; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>1</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="TrigLevel" />
+            <pos bounds="15117; 3069; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>4</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Average" />
+            <pos bounds="15117; 2540; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>Linear</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Window" />
+            <pos bounds="15117; 1993; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>Hanning</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Overlap" />
+            <pos bounds="15117; 1482; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>0</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="DeltaT" />
+            <pos bounds="15117; 970; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>6.4</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label17" />
+            <pos bounds="13282; 4039; 1799; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>SpR</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label16" />
+            <pos bounds="13264; 3510; 1817; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>PulsPerRev</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label15" />
+            <pos bounds="13264; 3069; 1817; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>TrigLevel</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label14" />
+            <pos bounds="13317; 2540; 1764; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>Average</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label13" />
+            <pos bounds="13300; 1993; 1782; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>Window</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label12" />
+            <pos bounds="13300; 1482; 1782; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>Overlap</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label11" />
+            <pos bounds="13353; 970; 1729; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>DeltaT(sec)</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="F0" />
+            <pos bounds="11624; 4128; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>  23.70</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="NameTachoChannel" />
+            <pos bounds="11624; 3598; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>Ch000</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="RotOrder" />
+            <pos bounds="11624; 3069; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>X-Y</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="RotDir" />
+            <pos bounds="11624; 2540; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>CCW</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="T" />
+            <pos bounds="11624; 1993; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>60</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="N" />
+            <pos bounds="11624; 1482; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>307200</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Fs" />
+            <pos bounds="11624; 970; 1588; 459" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <text>5120</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label10" />
+            <pos bounds="10425; 4039; 1164; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>F0 (Hz)</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label9" />
+            <pos bounds="10425; 3510; 1164; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>Tacho</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label8" />
+            <pos bounds="10425; 3069; 1164; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>RotOrder</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label7" />
+            <pos bounds="10425; 2540; 1164; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>RotDir</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label6" />
+            <pos bounds="10425; 1993; 1164; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>T (sec)</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label5" />
+            <pos bounds="10425; 1482; 1164; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>N (S)</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label4" />
+            <pos bounds="10425; 970; 1164; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" h_align="Right" />
+              <text>Fs (Hz)</text>
+            </_psn_>
+          </_psn_>
+          <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
+            <general name="Label1" />
+            <pos bounds="212; 318; 6473; 547" />
+            <style dock="None" />
+            <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcLabelWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
+              <textformat tx_color="Black" />
+              <text>Select AssetFolder</text>
+            </_psn_>
+          </_psn_>
+        </_psn_>
+      </sheet>
+      <hotkeys />
+    </_psn_>
+  </_psn_>
+</imc.Document.Formular>

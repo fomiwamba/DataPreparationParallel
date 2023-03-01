@@ -1,0 +1,61 @@
+<?xml version="1.0" standalone="yes"?>
+  <FamosProject7 Version="2">
+    <Name>DataProcessingProgram</Name>
+    <Comment></Comment>
+    <StoreItems>
+      <Variables>yes</Variables>
+      <CurveWindows>yes</CurveWindows>
+      <Sequences>yes</Sequences>
+      <Favorites>yes</Favorites>
+      <WindowPos>yes</WindowPos>
+      <InputWindow>yes</InputWindow>
+      <DataBrowser>yes</DataBrowser>
+      <RestartOnLoad>no</RestartOnLoad>
+      <Panels>yes</Panels>
+      <VariablesViewOptions>yes</VariablesViewOptions>
+    </StoreItems>
+    <Sections>
+      <Section Name="Main">
+        <Prop Name="Dataeditor">no</Prop>
+        <Prop Name="DataBrowser">yes</Prop>
+      </Section>
+      <Section Name="MainWndConfig">
+        <Prop Name="WndMain">31 27 1197 728 3 2</Prop>
+        <Prop Name="WndVar">0 0 0.25 0.4922 1 0 1</Prop>
+        <Prop Name="WndFkt">0 0.4922 0.25 1 1 0 0</Prop>
+        <Prop Name="WndFiles">0.25 0 1 0.113 1 0 1</Prop>
+        <Prop Name="WndSequ">0.25 0.113 1 0.7483 1 0 0</Prop>
+        <Prop Name="WndOut">0.25 0.7483 1 1 1 0 0</Prop>
+        <Prop Name="WndVar_L">1 1</Prop>
+        <Prop Name="WndFkt_L">1</Prop>
+        <Prop Name="WndFiles_L">0</Prop>
+        <Prop Name="WndSequ_L">25</Prop>
+      </Section>
+      <Section Name="VarList">
+        <Prop Name="Filter">*</Prop>
+      </Section>
+      <Section Name="DataBrowser.DataFiles">
+        <Prop Name="MeasurementIDFormat">auto</Prop>
+        <Prop Name="ExpandGroups">false</Prop>
+        <Prop Name="DSIuseGlobalMeaID">false</Prop>
+      </Section>
+      <Section Name="DataBrowser.ChannelList">
+        <Prop Name="Filter"></Prop>
+        <Prop Name="TypeFilter">0</Prop>
+      </Section>
+      <Section Name="DataBrowser.MeasurementList">
+        <Prop Name="Filter"></Prop>
+      </Section>
+      <Section Name="DaraBrowser.FileBrowser">
+        <Prop Name="DefaultFileFormat">~auto~|*.*</Prop>
+        <Prop Name="DefaultFileFormat_folder"></Prop>
+      </Section>
+      <Section Name="MeaView.ChannelList">
+        <Prop Name="Filter">0 *head*||</Prop>
+        <Prop Name="TypeFilter">0</Prop>
+      </Section>
+      <Section Name="MeaView.MeasurementList">
+        <Prop Name="Filter">0 *||</Prop>
+      </Section>
+    </Sections>
+  </FamosProject7>

@@ -1,0 +1,126 @@
+sequenz imc_logging "barnwood_rdc started"
+
+sigx = Waveforms:F1X
+t = xdel?(sig)*lang?(sig)
+
+TWF = gren(Waveforms,0,60)
+
+
+
+Twindow = 5;10,20
+_Tgesamt = xdel?(sig)*lang?(sig)
+_T_fenster = Twindow;_windowlength*xdel?(_signalx); Fensterbreite
+_deltaf = 1/_T_fenster; Abtastzeit
+_Fs = 1/xdel?(sigx); Abtastfrequenz
+wenn _T_fenster > _Tgesamt
+	_T_fenster = _Tgesamt
+ende
+_anzahl_it_mit_overlap = ganz((_Tgesamt-_overlap/100*_T_fenster)/(_T_fenster-_overlap/100*_T_fenster)); Anzahl der Iterationen mit Overlap-Fkt
+_windowlength = _T_fenster/xdel?(sigx)
+_count = 0
+i = 1;
+SOLANGE ii < _anzahl_it_mit_overlap 
+	_Tbeginn = (ii-1)*_T_fenster-(ii-1)*_overlap/100*_T_fenster
+	_Tende = ii*_T_fenster-(ii-1)*_overlap/100*_T_fenster;Tbeginn + T_fenster
+	_T_fenster_verifikation = _Tende-_Tbeginn
+	_N_beginn = floor(((ii-1)-(ii-1)*_overlap/100)*_windowlength);
+	_N_end = floor((ii-(ii-1)*_overlap/100)*_windowlength)-1
+	_Tmittel = (_Tende+_Tbeginn)/2
+	wenn ii = 1
+		_sigx_i = grenindex(sigx,(ii-1)*_windowlength+1,ii*_windowlength)
+		_sigy_i = grenindex(sigy,(ii-1)*_windowlength+1,ii*_windowlength)
+		_peak_i = grenindex(peak_,(ii-1)*_windowlength+1,ii*_windowlength)
+	sonst 
+		_sigx_i = grenindex(sigx,_N_beginn,_N_end)
+		_sigy_i = grenindex(sigy,_N_beginn,_N_end)
+		_peak_i = grenindex(peak_,_N_beginn,_N_end)
+	ende
+	;_Ax = AmpSpectrumPeak_1(Feature:ChannelX-mitte(Feature:ChannelX),_length,_window,_overlap,_average)
+	_Ax = wurz(2)*kmp1(dftspectrum(_sigx_i-mean(_sigx_i),_window))
+	_Ay = wurz(2)*kmp1(dftspectrum(_sigy_i-mean(_sigy_i),_window))
+	
+	seteinheit(_Ax,einheit?(signal1,1),1)
+	seteinheit(_Ay,einheit?(signal2,1),1)
+	
+	Ax_kask = binde(Ax_kask,_Ax)
+	Ay_kask = binde(Ay_kask,_Ay)
+	
+	wenn a_peaksig<>"None"
+		;sequenz Pulse2Speed _peak_i TrigLevel PulsPerRev 2
+		;_peak_i = Peak
+		;_peak_rec = stri(_peak_i,TrigLevel ,TrigLevel )
+		_dp0 = diff(_peak_i)*xdel?(_peak_i)
+		_Tx1 = posiex(-_dp0,2) - _Tbeginn; findet alle Zeiten, wo peak <= 0
+		_Tx0 = posiex(-_dp0,-2)- 5*xdel?(_peak_i) - _Tbeginn; findet alle Zeiten, wo peak <= 0
+		;_sigx_i = signal1
+		
+		OtrTachoMode(3, 0, PulsPerRev, 0)
+		_drehzahl = OtrTachoToSpeed(_peak_i)
+		SetEinheit(_drehzahl,"U/min",1)
+		_F0 = _drehzahl/60; Drehfrequenz in Hz
+		SetEinheit(_F0,"Hz",1)
+		_T0 = 1/_F0; Drehperiode in Sekunden
+		SetEinheit(_T0,"s",1)
+		_drehzahl_mitte = mitte(_drehzahl)
+		_F0_mitte = mitte(_F0)
+		_T0_mitte = mitte(_T0)
+		;zeigen _drehzahl_mitte
+	sonst
+		_F0_mitte = 0
+	ende
+	
+	F0_kask = binde(F0_kask, _F0_mitte);
+	yeinheit F0_kask Hz
+	wenn _F0_mitte <> 0
+		_px = kmp2(FrequencyResponse(_peak_i,_sigx_i,_windowlength,_window,0,2));+180;*inrad; Phasendifferenz zwischen X und Bezugssignal +180 -> Übereinstimmung mit lsq und fourieranalysator da peak nach unten zeigt
+		_py = kmp2(FrequencyResponse(_peak_i,_sigy_i,_windowlength,_window,0,2));+180;*inrad; Phasendifferenz zwischen X und Bezugssignal +180 -> Übereinstimmung mit lsq und fourieranalysator da peak nach unten zeigt
+	sonst
+		_px = kmp2(dftspectrum(_sigx_i,_window))
+		_py = kmp2(dftspectrum(_sigy_i,_window))
+	ende
+	
+	yeinheit _px Grad
+	yeinheit _py Grad
+	;_Ay = AmpSpectrumPeak_1(Feature:ChannelY-mitte(Feature:ChannelY),_length,_window,_overlap,_average)
+	
+	Px_kask = binde(Px_kask,_Px)
+	Py_kask = binde(Py_kask,_Py)
+	ii = ii +1
+ende
+SetSegLang(Ax_kask,lang?(_Ax))
+SetSegLang(Ay_kask,lang?(_Ay))
+Ax_mean = MatrixSumLines(Ax_kask,0)/(ii-1)
+Ay_mean = MatrixSumLines(Ay_kask,0)/(ii-1)*fact
+
+wenn _F0_mitte <> 0 and a_sig1 <> a_sig2 and a_sig1 <> a_peaksig
+	SetSegLang(Px_kask,lang?(_Px))
+	SetSegLang(Py_kask,lang?(_Py))
+	Px_mean = MatrixSumLines(Px_kask,0)/(ii-1)
+	Py_mean = MatrixSumLines(Py_kask,0)/(ii-1)*fact
+	SetSegLang(Basp_kask,lang?(_Basp))
+ende
+	
+_Ax_i = _Ax	
+
+tmax = 5
+n = tmax /xdel?(sig)
+nn = 2^15
+tist = nn*xdel?(sig)
+ASPEC = AmpSpectrumRMS(TWF,2^15,2,50,1,0)
+ii = 1
+iimax = GrKanalZahl?(ASPEC)
+solange ii <= iimax
+	SetKomm(ASPEC:[ii],"Hanning,50%") ; to be done for each channel
+	ii = ii + 1
+ende
+ASPEC_MEAN = AmpSpectrumRMS_1(TWF,2^15,2,50,1)
+ii = 1
+iimax = GrKanalZahl?(ASPEC_MEAN )
+solange ii <= iimax
+	
+	SetKomm(ASPEC_MEAN:[ii],"Hanning, 50%") ; to be done for each channel
+ii = ii + 1
+ende
+
+
+ii = 1

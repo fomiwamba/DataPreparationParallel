@@ -1,0 +1,221 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;Sequenz zur Berechnung von FFT-Spektren
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Inputs
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sequenz imc_logging "frf_analysis started"
+;inputs = Feature ChannelX FRF_ChY_List _length _window _overlap _average
+Feature = PA1
+_chx = PA2; Gehï¿½use oder Wellenbahnsignal in X-Richtung
+_chy_list = PA3; Gehï¿½use oder Wellenbahnsignal in X-Richtung
+_windowlength = PA4;:windowlength	
+_windowfft = PA5;:windowfft[channelcount] ; 	-> Standard auf 2 <=> Hanning
+_overlap = PA6;:overlap[channelcount] ;		-> Standard auf 50%		
+_average = PA7;:average[channelcount] ;		-> Standard auf 1
+
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Vorbereitung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for _cyi = 1 to txarraygetsize(_chy_list)
+	_chy = _chy_list[_cyi]
+	_signaly = Feature:{<_chy>}
+
+	_signalx = Feature:ChannelX
+	_signalx = _signalx - mean(_signalx);
+	_signaly = _signaly - mean(_signaly);
+
+	_unit_signalx = einheit?(_signalx,1)
+	_unit_signaly = einheit?(_signaly,1)
+	xOFFSET _signalx 0
+	xOFFSET _signaly 0
+
+	wenn lang?(_signaly)>2 
+		sequenz SignaleGleichSetzen _signalx _signaly
+		_signalx = _sig1
+		_signaly = _sig2
+	ende
+
+
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;Rechenteil
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+	_T_fenster = _windowlength*xdel?(_signalx); Fensterbreite
+	_deltaf = 1/_T_fenster; Abtastzeit
+	_Fs = 1/xdel?(_signalx); Abtastfrequenz
+	_Tgesamt = lang?(_signalx)*xdel?(_signalx); Gesamte Messdauer
+	wenn _T_fenster > _Tgesamt
+		_T_fenster = _Tgesamt
+	ende
+	Fs = 1/xdel?(_signalx)
+	Fmax = Fs/2.56
+	_anzahl_it_mit_overlap = ganz((_Tgesamt-_overlap/100*_T_fenster)/(_T_fenster-_overlap/100*_T_fenster)); Anzahl der Iterationen mit Overlap-Fkt
+
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; Zu berechnenden Spektren
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+	_FRF_Mag_kask = leer; FRF Amplitudenspektrum 
+	_FRF_Ph_kask = leer; FRF Phasenspektrum
+	_FRF_Coh_kask = leer; FRF Kphärenzspektrum
+
+	_Tmittel_kask = leer;
+
+	_nn = 1;
+	SOLANGE _nn <= _anzahl_it_mit_overlap 
+	
+		; Overlap theorie
+		;Tgesamt = _windowlength*Tfenster - (_windowlength-1)*Overlap*Tfenster
+		;Tbeginn = i*Tfenster - (i-1)*Overlap*Tfenster - Tfenster
+		;Tende = i*Tfenster - (i-1)*Overlap*Tfenster 
+	
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		;1) Zeitfenster Selektion
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		if 1
+			_Tbeginn = (_nn-1)*_T_fenster-(_nn-1)*_overlap/100*_T_fenster
+			_Tende = _nn*_T_fenster-(_nn-1)*_overlap/100*_T_fenster;Tbeginn + T_fenster
+			_T_fenster_verifikation = _Tende-_Tbeginn
+			_N_beginn = floor(((_nn-1)-(_nn-1)*_overlap/100)*_windowlength);
+			_N_end = floor((_nn-(_nn-1)*_overlap/100)*_windowlength)-1
+			_Tmittel = (_Tende+_Tbeginn)/2
+			_Tmittel_kask = binde(_Tmittel_kask,_Tmittel)
+	
+			wenn _nn = 1
+				_x_g = grenindex(_signalx,(_nn-1)*_windowlength+1,_nn*_windowlength)
+				_y_g = grenindex(_signaly,(_nn-1)*_windowlength+1,_nn*_windowlength)
+			sonst 
+				_x_g = grenindex(_signalx,_N_beginn,_N_end)
+				_y_g = grenindex(_signaly,_N_beginn,_N_end)
+			ende
+		ende
+	
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		;4) Frequenzanalyse -> Amplitude und Phasenspektrum, Oil whirl amplitudde und Frequenz
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+		; search window_length = 2^n
+		for i = 13 to 20
+			_windowlength_ = 2^i
+			if _windowlength_ > _windowlength
+				_windowlength_ = 2^(i-1)
+				break
+			ende
+		ende
+
+		;wenn sues 
+		_x_g = grenindex(_x_g,1,_windowlength_ )
+		_y_g = grenindex(_y_g,1,_windowlength_ )
+
+		
+		_overlap_ = 90
+		if 1
+			_nred = _windowlength_*xdel?(_x_g)/10; 
+			if _nred < 1
+				_nred_ = 1
+			end
+			if _nred >= 1
+				_nred_ = 2
+			end
+			if _nred > 2 
+				_nred_ = 2
+			end
+			if _nred > 4
+				_nred_ = 4
+			end
+			if _nred > 8
+				_nred_ = 8
+			end
+			if _nred > 16
+				_nred_ = 16
+			end
+			_nlen = _windowlength_/_nred_; = 4*4096; = _nlen = 10/xdel?(_x_g)
+		else
+			_nmin = 5/xdel?(_x_g)
+			for i = 12 to 20
+				_nlen = 2^i
+				if _nlen > _nmin
+					break
+				ende
+			ende
+		end
+		if _nlen > 8192
+			_nlen = 8192
+		end
+		_FRF_Coh = Coherence(_x_g,_y_g,_nlen,_windowfft,_overlap_)
+		;zeigen _FRF_Coh
+		_FRF = FrequencyResponse(_x_g,_y_g,_nlen,_windowfft,_overlap_,2)
+
+		_FRF_Mag =_FRF.b; kmp1(_FRF)
+		;_FRF_Mag = db(_FRF_Mag)
+		_FRF_Ph = _FRF.p; kmp2(_FRF)
+		if 1
+			;_FRF_Ph = PhaseContinuous(_FRF_Ph)
+			_FRF_Ph = PhaseMod( _FRF_Ph, "360" )
+		else			
+			for _iip = 1 to lang?(_FRF_Ph)
+				if _FRF_Ph[_iip] <= 0 
+					_FRF_Ph[_iip] = 360 +  _FRF_Ph[_iip]
+				ende
+			ende		
+		ende
+			
+		;_FRF_Coh = Coherence(gren(_signalx,0,20),gren(_signaly,0,20),_windowlength_,_windowfft,_overlap)
+			
+		_FRF_Mag_kask = binde(_FRF_Mag_kask,_FRF_Mag)	
+		_FRF_Ph_kask = binde(_FRF_Ph_kask,_FRF_Ph)	
+		_FRF_Coh_kask = binde(_FRF_Coh_kask,_FRF_Coh)	
+			 
+		seteinheit(_FRF_Mag_kask,einheit?(_FRF_Mag,1),1)
+		seteinheit(_FRF_Ph_kask,einheit?(_FRF_Ph,1),1)
+		seteinheit(_FRF_Coh_kask,"",1)
+				
+		unit = einheit? (_FRF_Mag, 1)
+		sequenz Create_EventData_STFT "FRF_Mag_event" _FRF_Mag  unit
+		unit = einheit? (_FRF_Ph, 1)
+		sequenz Create_EventData_STFT "FRF_Ph_event" _FRF_Ph  unit
+		unit = einheit? (_FRF_Coh, 1)
+		sequenz Create_EventData_STFT "FRF_Coh_event" _FRF_Coh  unit
+		;ende
+		_nn = _nn + 1
+	ENDE
+
+	entf delme_*
+	Ch_Config:Zeitfensterbreite = _T_fenster
+	Ch_Config:overlap_fft = _overlap
+	Ch_Config:Gesamtfenster = _Tgesamt
+	Ch_Config:Iterationen = _anzahl_it_mit_overlap
+	Feature:Tmittel_zk = _Tmittel_kask
+	;wenn sues
+	frf_name = _chy + "_frf_mag"
+	Feature:{<frf_name>} = FRF_Mag_event
+	frf_name = _chy + "_frf_ph"
+	Feature:{<frf_name>}  = FRF_Ph_event
+	frf_name = _chy + "_frf_coh"
+	Feature:{<frf_name>}  = FRF_Coh_event
+	SetSegLang(_FRF_Mag_kask,lang?(_FRF_Mag))
+	SetSegLang(_FRF_Ph_kask,lang?(_FRF_Ph))
+	SetSegLang(_FRF_Coh_kask,lang?(_FRF_Coh))
+	
+		
+	if txarraygetsize(ch_frf_par_liste) > 0  and lang?(_FRF_Mag_kask) > 1 and lang?(_FRF_Ph_kask) > 1 and lang?(_FRF_Coh_kask) > 1
+		for _pari = 1 to txarraygetsize(ch_frf_par_liste)
+			_pari_name = ch_frf_par_liste[_pari]
+			_pari_name_parts = txsplit(_pari_name,"_")
+			_pari_name_spec@freq = txsplit(_pari_name_parts[2],"@")
+			if txarraygetsize(_pari_name_parts) = 3; extraction narrowband energy values
+				_pari_name_spec@freq = txsplit(_pari_name_parts[3],"@")
+				_pari_name_sigx = _pari_name_parts[1]
+				_pari_name_sigy = _pari_name_parts[2]
+				_pari_name_spec =  _pari_name_parts[2] + "_" + _pari_name_spec@freq [1]
+				_pari_name_freq = _pari_name_spec@freq [2]
+				if tverg(_pari_name_sigx,_chx) = 0 and tverg(_pari_name_sigy,_chy) = 0
+					sequenz FreqValueSchnitt_FFT _FRF_Mag_kask _FRF_Ph_kask _FRF_Coh_kask _pari_name_freq  _pari_name_spec
+				end
+			ende
+		end
+	ende
+	;ende
+ende

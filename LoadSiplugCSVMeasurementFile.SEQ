@@ -1,0 +1,370 @@
+;%%%%%%%%%%%%%%
+; LOAD FILE
+;%%%%%%%%%%%%%%
+; input: filename
+; output: outputs: Data, date_time_str, OP_Data, Feature, Data_Channel
+
+
+sequenz imc_logging "load_measurement_files started"
+
+;filename = "D:\Projekte\ValveTest\ConditionFiles\3CAE-V629G (#1032) 2018-03-27 06-58-06 O-1803-17 RMS A.csv"
+
+input_measurement_file = filename
+Data = Grneu()
+OP_Data = Grneu()
+step_ = "Load Measurement File"
+PnSetText("Step",step_)	
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; protocol, that file selected is done correctly!
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_txt = ZeitinText(ZeitSystem?(),3) +": " + input_measurement_file   + "-->" + filename
+_fh1 = FileOpenASCII(FileNameList_file,2)
+_err = FileLineWrite(_fh1,_txt,0)
+_err = FileClose(_fh1)
+
+
+
+filename_parts =  txsplit(filename," ")
+filename_parts_numb = txarraygetsize(filename_parts)
+filename_date = filename_parts[filename_parts_numb-4] + " " +filename_parts[filename_parts_numb-3]  
+filename_jahr = tteil(filename_date,1,4)
+filename_mon = tteil(filename_date,6,2) 
+filename_tag = tteil(filename_date,9,2)
+filename_hour = tteil(filename_date,12,2)
+filename_min = tteil(filename_date,15,2)
+filename_sec = tteil(filename_date,18,2)
+
+
+_fh= FileOpenASCII( filename,0 )
+if _fh > 0
+	_TxZeile = ""
+	_ok = 0
+	_count = 0
+	file_info = TxArrayCreate(0)
+	file_props = grneu()
+	solange _ok = 0
+		_ok = FileLineRead( _fh, _TxZeile, 0 )
+		if _TxZeile <> ""
+			if _ok = 0 and _count >= 1
+				_TxZeileParts = txsplit(_TxZeile,":")
+				_varname1 = _TxZeileParts[1]
+				_varname2 = _TxZeileParts[2]
+				
+				if txarraygetsize(_TxZeileParts) > 2
+					for _ii = 1 to txarraygetsize(_TxZeileParts)-2
+						_varname2 = _varname2 + ":" + _TxZeileParts[_ii+2]
+					end
+				end
+				
+				_varvalue_parts = txsplit(_varname2,""); 
+				_varvalue = _varvalue_parts[2] 
+				if txarraygetsize(_varvalue_parts) > 2
+					for _ii = 1 to txarraygetsize(_varvalue_parts)-2
+						_varvalue = _varvalue + " " + _varvalue_parts[_ii+2]
+					end
+				end
+				
+				{<_varname1>} = txreplace(_varvalue, "'","",0,1);
+				file_props:{<_varname1>} = {<_varname1>} 
+				file_info[_count] = _TxZeile
+				;sequenz insert_item "AssetFolderList" AssetFolderItem[_count]
+			ende
+		else
+			break
+		end
+		_count = _count + 1
+	ende
+	FileClose(_fh)
+sonst
+	_err = FileErrCode?()
+	zeigen _err
+ende
+
+_varname = "Measurement date"
+MeasDateTime = file_props:{<_varname>}
+MeasDateTime = txsplit(MeasDateTime," ")
+MeasDateTimeStr_ = MeasDateTime[1] + "T" + MeasDateTime[2]; --> '27.03.2018T18:58:06
+MeasTag_ = tteil(MeasDateTimeStr_,1,2)
+MeasMon_ = tteil(MeasDateTimeStr_,4,2)
+MeasJahr_ = tteil(MeasDateTimeStr_,7,4)
+MeasHour_ = tteil(MeasDateTimeStr_,12,2)
+MeasMin_ = tteil(MeasDateTimeStr_,15,2)
+MeasSec_ = tteil(MeasDateTimeStr_,18,2)
+
+if MeasJahr_ <> filename_Jahr
+	MeasJahr_ = filename_Jahr
+end
+if MeasMon_ <> filename_Mon
+	MeasMon_ = filename_Mon
+end
+if MeasTag_ <> filename_Tag
+	MeasTag_ = filename_Tag
+end
+if MeasHour_ <> filename_hour 
+	filename_hour_ = tzuew(filename_hour,"a") + 12
+	filename_hour_ = tform(filename_hour_,"f1.0")
+	if MeasHour_ <> filename_hour_ 
+		MeasHour_ = filename_hour_
+	end
+	if MeasHour_ = "24"
+		MeasHour_ = "00"
+	end
+end
+if MeasMin_ <> filename_min
+	MeasMin_ = filename_min
+end
+if MeasSec_ <> filename_sec
+	MeasSec_ = filename_sec
+end
+MeasDateTimeStr = MeasJahr_+MeasMon_+MeasTag_ + "_" + MeasHour_+MeasMin_+MeasSec_
+
+MeasTag = tzuew(MeasTag_,"a")
+MeasMon = tzuew(MeasMon_,"a")
+MeasJahr = tzuew(MeasJahr_,"a")
+MeasHour = tzuew(MeasHour_,"a")
+MeasMin = tzuew(MeasMin_,"a")
+MeasSec = tzuew(MeasSec_,"a")
+
+MeasDateTimeNumb = TimeJoin(MeasTag, MeasMon, MeasJahr, MeasHour, MeasMin, MeasSec)
+TrigTime = MeasDateTimeNumb
+
+
+_file = filename
+importsvorlage = "#ImportAscii1.dll|ascii_csv_siplug"
+_fileid = FileOpenFAS(_file, importsvorlage, 0); ascii_statusfile
+SiplugMeasData = Grneu()
+SiplugMeasVar = TxArrayCreate(0)
+_item = 0
+wenn _fileid > 0
+	_anzPar = FileObjNum?(_fileid)
+	_index = 1
+	SOLANGE _index <= _anzPar  
+		_typ = FileObjType?(_fileid,_index)
+		wenn _typ = 1
+			_Parname = FileObjName?(_fileid,_index)
+			
+			
+			if txwo(_parname, "U1 RMS") <> 0 or txwo(_parname, "U1 eff") <> 0 or txwo(_parname, "U1rms") <> 0
+				_parname = "U1rms"
+			elseif  txwo(_parname, "U2 RMS") <> 0 or txwo(_parname, "U2 eff") <> 0 or txwo(_parname, "U2rms") <> 0
+				_parname = "U2rms"
+			elseif  txwo(_parname, "U3 RMS") <> 0 or txwo(_parname, "U3 eff") <> 0 or txwo(_parname, "U3rms") <> 0
+				_parname = "U3rms"
+			elseif  txwo(_parname, "U31 RMS") <> 0 or txwo(_parname, "U31 eff") <> 0 or txwo(_parname, "U31rms") <> 0
+				_parname = "U31rms"
+			elseif  txwo(_parname, "U23 RMS") <> 0 or txwo(_parname, "U23 eff") <> 0 or txwo(_parname, "U23rms") <> 0
+				_parname = "U23rms"
+			elseif  txwo(_parname, "U12 RMS") <> 0 or txwo(_parname, "U12 eff") <> 0 or txwo(_parname, "U12rms") <> 0
+				_parname = "U12rms"
+			elseif  txwo(_parname, "I1 RMS") <> 0 or txwo(_parname, "I1 eff") <> 0 or txwo(_parname, "I1rms") <> 0
+				_parname = "I1rms"
+			elseif  txwo(_parname, "I2 RMS") <> 0 or txwo(_parname, "I2 eff") <> 0 or txwo(_parname, "I2rms") <> 0
+				_parname = "I2rms"
+			elseif  txwo(_parname, "I3 RMS") <> 0 or txwo(_parname, "I3 eff") <> 0 or txwo(_parname, "I3rms") <> 0
+				_parname = "I3rms"
+			else
+			end
+		
+			{<_Parname>} = FileObjRead(_fileid,_index)
+			SetTime({<_Parname>},TrigTime)
+			Seteinheit ({<_Parname>},"s",0)
+			
+			;			Sample       	Time         	U1 RMS       	U2 RMS       	U3 RMS       	I1 RMS       	I2 RMS       	I3 RMS       	U31 RMS      	U23 RMS      	U12 RMS      	P            	Pcorr        	Time         	Iunsym       	Uunsym       	Trigger      	Button       	Uctl_z       	Uctl_a       	
+			;			[#]          	[s]          	[V]          	[V]          	[V]          	[A]          	[A]          	[A]          	[V]          	[V]          	[V]          	[kW]         	[kW]         	[s]          	[%]          	[%]          	[0/1]        	[0/1]        	[0/1]        	[0/1] 
+			;
+			;			Sample       	Time         	U1 eff       	U2 eff       	U3 eff       	I1 eff (RMS) 	I2 RMS       	I3 eff (RMS) 	U31 eff      	U23 eff      	U12 eff      	P            	Pcorr        	Time         	Iunsym       	Uunsym       	Trigger      	Button       	Uctl_a       	Uctl_z       	
+			;			[#]          	[s]          	[V]          	[V]          	[V]          	[A]          	[A]          	[A]          	[V]          	[V]          	[V]          	[kW]         	[kW]         	[s]          	[%]          	[%]          	[0/1]        	[0/1]        	[0/1]        	[0/1]  
+			;
+			;			Sample       	Time         	U1rms        	U2rms        	U3rms        	I1rms        	I2rms        	I3rms        	U31rms       	U23rms       	U12rms       	P            	Pcorr        	Time         	Iunsym       	Uunsym       	Trigger      	Button       	Uctl_a       	Uctl_z       	
+			;			[#]          	[s]          	[V]          	[V]          	[V]          	[A]          	[A]          	[A]          	[V]          	[V]          	[V]          	[kW]         	[kW]         	[s]          	[%]          	[%]          	[0/1]        	[0/1]        	[0/1]        	[0/1]        	
+
+			if txwo(_parname, "Sample") <> 0 or txwo(_parname, "Trigger") <> 0 or  txwo(_parname, "Button") <> 0 or  txwo(_parname, "Uctl_a") <> 0 or  txwo(_parname, "Uctl_z") <> 0 
+				Seteinheit ({<_Parname>},"s",1)
+			end
+			if txwo(_parname, "Time") <> 0
+				Seteinheit ({<_Parname>},"s",1)
+			end
+			if txwo(_parname, "U1rms") <> 0 or txwo(_parname, "U2rms") <> 0 or txwo(_parname, "U3rms") <> 0 or txwo(_parname, "U31rms") <> 0 or txwo(_parname, "U23rms") <> 0 or txwo(_parname, "U12rms") <> 0 
+				Seteinheit ({<_Parname>},"V",1)
+			end
+			if txwo(_parname, "I1rms") <> 0 or txwo(_parname, "I2rms") <> 0 or txwo(_parname, "I3rms") <> 0 
+				Seteinheit ({<_Parname>},"A",1)
+			end
+			if txwo(_parname, "P") <> 0 or txwo(_parname, "Pcorr") <> 0 
+				Seteinheit ({<_Parname>},"kW",1)
+			end
+			if txwo(_parname, "Iunsym") <> 0 or txwo(_parname, "Uunsym") <> 0
+				Seteinheit ({<_Parname>},"%",1)
+			end
+		        	
+			if txwo(_parname, "Time") = 0
+				wenn IsXY({<_Parname>})
+					{<_Parname>} = sort({<_Parname>},7)
+					SiplugMeasData:{<_Parname>}={<_Parname>}
+					_item = _item + 1
+					SiplugMeasVar[_item] = _Parname
+				sonst
+					SiplugMeasData:{<_Parname>}={<_Parname>}
+					_item = _item + 1
+					SiplugMeasVar[_item] = _Parname
+				ende
+			end
+		ende
+		_index = _index + 1
+	ende
+	fileclose(_fileid)
+ende
+
+
+;PIC:	'3CUS-V423B'
+;PIC-Nr:	1203
+;Measurement:	''
+;Measurement ID:	O-1805-1
+;Measurement file:	'\\KSLABSRV02\ADAM64DEV2017\ADAM64FileStreamDirTHGx\Measurements\2018-05\S4M3_1400715_2018-05-04T19-48-15_B2018-07-16T13-03-01,299_I2018-07-17T09-47-55.A64M'
+;Measurement date:	'04.05.2018 19:48:15'	'2018-05-04T19:48:15.0000000+02:00'
+;Sub acquisition:	'Auf'	1
+;Export range:	-0,1 ... 15,45 s
+;Highest sample rate:	500 Hz
+;Base time increment:	2 ms
+;Offset (Pre-Trigger):	-0,100000001490116 s
+;Systemstate:	ColdUnpressurized	1
+;SystemPressure:	0 bar
+;SystemTemperature:	0 °C
+
+	
+_varname = "PIC"
+ValvePIC = txreplace(file_props:{<_varname>}, " ","",0,1);
+_varname = "Sub acquisition"
+ValveSubAcq = txreplace(file_props:{<_varname>}, " ","",0,1);
+_varname = "SystemPressure"
+ValveSystemPressure = txreplace(file_props:{<_varname>}, " ","",0,1);
+_varname = "Systemstate"
+ValveSystemstate = txreplace(file_props:{<_varname>}, " ","",0,1);
+_varname = "SystemTemperature"
+ValveSystemTemperature= txreplace(file_props:{<_varname>}, " ","",0,1);
+_varname = "Export range"
+ValveExportRange= txreplace(file_props:{<_varname>}, " ","",0,1);
+_varname = "Highest sample rate"
+ValveSampleFreq= txreplace(file_props:{<_varname>}, " ","",0,1);
+_varname = "Base time increment"
+ValveSampleTime= txreplace(file_props:{<_varname>}, " ","",0,1);
+_varname = "Offset (Pre-Trigger)"
+ValvePreTrig = txreplace(file_props:{<_varname>}, " ","",0,1);
+
+; ValvePIC = 
+; VavleSubAcq = 0=unknown, 1=Opening, 2=Closing --> Direction of the sub-measurement of a bundle.
+if txwo(ValveSubAcq,"0") <> 0
+	ValveSubAcqValue = 0
+elseif txwo(ValveSubAcq,"1") <> 0
+	ValveSubAcqValue = 1
+elseif txwo(ValveSubAcq,"2") <> 0
+	ValveSubAcqValue = 2
+else
+end
+dt = xdel?(SiplugMeasData:[1])
+n = lang?(SiplugMeasData:[1])
+_xoffset = xoff?(SiplugMeasData:[1])
+ValveSubAcqValueVec = ValveSubAcqValue + 0 * rampe (0, dt, n)
+SetTime(ValveSubAcqValueVec,TrigTime)
+Seteinheit (ValveSubAcqValueVec,"s",0)
+ValveSubAcqValueVec = xoff(ValveSubAcqValueVec, _xoffset)
+SiplugMeasData:ValveSubAcq=ValveSubAcqValueVec
+
+
+;ValveSystemPressure = x =  if specified or known, 0 = if not specified/unknown
+; Pressure at the valve during the measurement, in [bar]
+if txwo(ValveSystemPressure,"0") = 0
+	ValveSystemPressureValue = txreplace(ValveSystemPressure, "bar","",0,1);
+	ValveSystemPressureValue = tzuew(ValveSystemPressureValue,"f1.2")
+else
+	ValveSystemPressureValue = 0
+end
+ValveSystemPressureVec = ValveSystemPressureValue + 0 * rampe (0, dt, n)
+SetTime(ValveSystemPressureVec,TrigTime)
+Seteinheit (ValveSystemPressureVec,"s",0)
+Seteinheit (ValveSystemPressureVec,"Bar",1)
+ValveSystemPressureVec = xoff(ValveSystemPressureVec, _xoffset)
+SiplugMeasData:ValveSystemPressure=ValveSystemPressureVec
+
+;ValveSystemstate = 0=not specified / unknown; 1=cold/pressureless; 2=system pressure; 3=differential pressure
+; System status of the valve during the measurement.
+if txwo(ValveSystemstate,"0") <> 0
+	ValveSystemstateValue = 0
+elseif txwo(ValveSystemstate,"1") <> 0
+	ValveSystemstateValue = 1
+elseif txwo(ValveSystemstate,"2") <> 0
+	ValveSystemstateValue = 2
+elseif txwo(ValveSystemstate,"3") <> 0
+	ValveSystemstateValue = 3
+else
+	
+end
+ValveSystemstateVec = ValveSystemstateValue + 0 * rampe (0, dt, n)
+SetTime(ValveSystemstateVec,TrigTime)
+Seteinheit (ValveSystemstateVec,"s",0)
+ValveSystemstateVec = xoff(ValveSystemstateVec, _xoffset)
+SiplugMeasData:ValveSystemstate=ValveSystemstateVec
+
+;ValveSystemTemperature = x =  if specified or known, 0 = if not specified/unknown
+; Temperature at the valve during the measurement, in [°C]
+if txwo(ValveSystemTemperature,"0") <> 0
+	;ValveSystemTemperatureValue = txreplace(ValveSystemTemperature, "°C","",0,1);
+	ValveSystemTemperatureValue = tteil(ValveSystemTemperature, 1, tlang(ValveSystemTemperature)-3) 
+	ValveSystemTemperatureValue = tzuew(ValveSystemTemperatureValue,"f")
+else
+	ValveSystemTemperatureValue = 0
+end
+ValveSystemTemperatureVec = ValveSystemTemperatureValue + 0 * rampe (0, dt, n)
+SetTime(ValveSystemTemperatureVec,TrigTime)
+Seteinheit (ValveSystemTemperatureVec,"s",0)
+Seteinheit (ValveSystemTemperatureVec,"°C",1)
+ValveSystemTemperatureVec = xoff(ValveSystemTemperatureVec, _xoffset)
+SiplugMeasData:ValveSystemTemp=ValveSystemTemperatureVec
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Store VibData to *.dat File
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Data = SiplugMeasData
+MeasDate = MeasDateTimeStr; ZeitInText((Zeit?(Data:[1]) + xoff?(Data:[1])),3)
+;sequenz date_to_string ; MeasDate -> Date_string
+Date_string = MeasDateTimeStr
+
+step_ = "Store *.dat file"
+PnSetText("Step",step_)			
+if GrKanalZahl?(Data) > 0
+	;Out_verz = "D:\Projekte\ValveTest" + "\Output\TWF"
+	sicherungsfolder = Out_verz + "\"	; +"\" + _jjjj +"\" + _mm +"\" + _dd +"\"; neu 20190319
+	_status = FsCreateDirectory(sicherungsfolder)
+	wenn _status <>0
+		_error = FsGetLastError()
+	ende
+	file = FsSplitPath(filename,2)
+
+	vib_file = ValvePIC+"_"+ValveSubAcq+"_"+ValveSystemPressure+"_"+ValveSystemstate+"_"+ValveSystemTemperature+"_"
+	vib_file = vib_file +Date_string+".dat"	;+".dat" bei tdms files -> yyyymmdd_hhmnss
+	sicherungsfile_dat = sicherungsfolder + vib_file ;
+	sequenz store_dat_file
+
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; store channel name, unit, sampling frequency in channelliste
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	step_ = "Export Channel List"
+	PnSetText("Step",step_)		
+	sequenz export_channel_list
+		
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; protocol, that file loading is done correctly!
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	_txt = ZeitinText(ZeitSystem?(),3) +": " + input_measurement_file   + "-->" + sicherungsfile_dat
+	_fh1 = FileOpenASCII(FileNameList_file,2)
+	_err = FileLineWrite(_fh1,_txt,0)
+	_err = FileClose(_fh1)
+	
+	
+ende
+; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Data Loading done!
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

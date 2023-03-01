@@ -1,0 +1,51 @@
+sequenz imc_logging "load_csv_file started"
+
+template = PA2;
+;template = 3
+if  template = 1
+	importsvorlage = "#ImportAscii1.dll|ascii_statusfile"
+elseif template = 2
+	importsvorlage = "#ImportAscii1.dll|ascii_pythonfile"
+elseif template = 3
+	importsvorlage = "#ImportAscii1.dll|ascii_CNT_opfiles"
+elseif template = 4
+	importsvorlage = "#ImportAscii1.dll|ascii_lpmsopdata"
+ende
+
+
+OP_Data = GrNeu()
+_fileidx = FileOpenFAS(PA1,importsvorlage, 0)
+;_fileid = FileOpenFAS(op_file,importsvorlage, 0)
+wenn _fileidx > 0
+	_anzPar = FileObjNum?(_fileidx)
+	_index = 1
+	SOLANGE _index <= _anzPar  
+		_typ = FileObjType?(_fileidx,_index)
+		wenn _typ = 1
+			_VarName = FileObjName?(_fileidx,_index)
+			{<_VarName>} = FileObjRead(_fileidx,_index)
+			;SetDataFormat ({<_VarName>}, 0, 0, 0 ) 
+			;seteinheit({<_VarName>},"s",0)
+			;seteinheit({<_VarName>},"g",1)
+			wenn IsXY({<_VarName>})
+				{<_VarName>} = sort({<_VarName>},7)
+				OP_Data:{<_VarName>}={<_VarName>}
+			sonst
+				OP_Data:{<_VarName>}={<_VarName>}
+			ende
+			wenn tverg(_VarName,"Date_Time") = 0; _index = 1
+				DateTimeVec = sort(Zeit?({<_VarName>})+kmpx({<_VarName>}),1)
+				OP_Data:Date_Time=DateTimeVec
+			else
+				
+			ende
+			;sequenz insert_item "TrendDataList" _VarName
+		ende
+		_index = _index + 1
+	ende
+	fileclose(_fileidx)
+	;Data00 = Data;
+sonst
+	_err = FileErrCode?()
+	zeigen _err
+ende

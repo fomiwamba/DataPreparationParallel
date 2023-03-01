@@ -1,0 +1,226 @@
+;sequenz Load_gt_kues_event_data
+
+; spectrogram s_xxxx wird stark geschnitten zwischen -500 ms und 500 ms
+; rms r_xxx wird geschnitten zwischen -4s und 6s
+
+; channelliste = TopChamber_1, BottomChamber_2, GuideBlade_3, GuideBlade_4, GuideBlade_5, GuideBlade_6, GuideBlade_7, GuideBlade_8
+; D:\Projekte\GT_KUES\event\HemwegUnit90_18de9d22\s_B02.dat
+entf *
+
+reset_folder = 1
+store = 1
+import_to_influxdb = 1
+
+
+
+assetfolder = "D:\Projekte\GT_KUES"
+event_folder = assetfolder + "\event\"
+
+; reset gt_kues folder
+if reset_folder = 1
+	Outputfolder = assetfolder + "\Output\"
+	_erg = FsFileExists(Outputfolder)
+	wenn _erg = 2
+		_erg = FsRemoveDirectory(Outputfolder,1)
+		wenn _erg<>0
+			_error = FsGetLastError()
+		ende
+	ende
+		
+	path_assetfolder_selected = "C:\BDA\AssetFolderSelected.txt"
+
+	_fh = FileOpenASCII(path_assetfolder_selected,1)
+	if _fh > 0
+		_err = FileLineWrite(_fh,AssetFolder,0)
+		;_err = FileLineWrite(_fh,OpMode,0)
+		_err = FileClose(_fh)
+	sonst
+		_err = FileErrCode?() 
+		zeigen _err
+	ende
+	
+	ret = Execute( "C:\BDA\AI\Start_ResetInfluxDB.bat","" , "", 2,-1)
+	
+	_erg = boxnachricht("Info","Assetfolder resetted","!1")
+end
+
+
+_folder_i = FsDlgSelectDirectory("Event Folder",event_folder,1)
+
+; load event data
+_folder_id = FsFileListNew(event_folder,"*",1,0,2)
+
+n_folders =FsFileListGetCount(_folder_id)
+folder_list = TxArrayCreate(0)
+_ii_max = n_folders
+_ii_min  = 1
+_ii_max = _ii_min
+for _ii = _ii_min to _ii_max
+	folder_ratio = floor(_ii/n_folders*100) 
+	seteinheit(folder_ratio,"%",1)
+	zeigen folder_ratio
+	
+	
+	;_folder_i=FsFileListGetName(_folder_id,_ii)
+	
+	folder_list[_ii] = _folder_i
+
+	; pro event_folder
+	event_folder_ii = folder_list[_ii] + "\"
+	_file_id = FsFileListNew(event_folder_ii,"*.dat",0,0,2)
+	n_files =FsFileListGetCount(_file_id)
+	file_list = TxArrayCreate(0)
+	file_data = grneu()
+	file_par_list = TxArrayCreate(0)
+	_zz = 1
+	for _jj = 1 to n_files
+		file_ratio = floor(_jj/n_files*100) 
+		seteinheit(file_ratio,"%",1)
+		zeigen file_ratio
+		
+		_file_j =FsFileListGetName(_file_id,_jj)
+		_file_j_red = FsSplitPath(_file_j,2)
+		file_list[_jj] = _file_j
+      
+		idFile = FileOpenDSF(_file_j, 0)
+		IF idFile >= 1 
+			count = FileObjNum?(idFile)
+			index = 1 
+			WHILE index <= count
+				Typ = FileObjType?(idFile, index)
+				IF Typ = 1
+					TxName = FileObjName?(idFile, index)
+					;if txwo(TxName,"k_d_") = 0 and txwo(TxName,"k_accum") = 0 and txwo(TxName,"d_accum") = 0 and txwo(TxName,"k_o52") = 0 #
+					if txwo(TxName,"d_") = 0 and txwo(TxName,"k_") = 0; and txwo(TxName,"t_") = 0 and txwo(TxName,"v_") = 0; and txwo(TxName,"r_") <> 0	and txwo(TxName,"s_") <> 0			
+						txname_parts = txsplit(TxName,"_")
+						TxName_ = ""
+						for _kk = 1 to txarraygetsize(txname_parts)
+							TxName_ = TxName_ + txname_parts[_kk]
+						end					
+						<TxName> = FileObjRead(idFile, index)
+						
+						if txwo(TxName,"s_") <> 0 ; bei Sonogram berechnete freqmagmax or freqgmagdiff
+							sequenz reduce_gt_kues_sonogram_to_fftmax_freqmagmax  <TxName>; --> fftmax, fftdiff, freqmagmax, freqmagdiff
+							<TxName_>=<TxName>
+							sonogram_data:{<TxName_>}=<TxName_>
+							file_data:{<TxName_>} = freqmagdiff
+						else
+							file_data:{<TxName_>} = <TxName>
+						end
+						
+						file_par_list[_zz] = TxName_
+						_zz = _zz +1
+					
+						;file_data:{<_file_j_red>} = <TxName>
+					end
+				END
+				index = index + 1
+			END
+			ret = FileClose(idFile)
+		END      
+      
+	end
+	FsFileListClose(_file_id)
+
+	;clean 
+	ref_par_name = "kTopChamber1"
+	ref_par_name = "rTopChamber1"
+	ref_par_name = "sTopChamber1"
+	ref_par = file_data:{<ref_par_name>}
+	T0_ref = time?(ref_par)
+	T0_ref_str = TimeToText(T0_ref,3)
+	_yyyy =  tform(TimeSplit(T0_ref,2),"f1.0")
+	_mm = tform(TimeSplit(T0_ref,1),"f1.0")
+	_dd = tform(TimeSplit(T0_ref,0),"f1.0")
+	_hh = tform(TimeSplit(T0_ref,3),"f1.0")
+	_mn = tform(TimeSplit(T0_ref,4),"f1.0")
+	_ss = tform(TimeSplit(T0_ref,5),"f1.0")
+
+	if tleng(_mm) < 2
+		_mm = "0" + _mm
+	end
+	if tleng(_dd) < 2
+		_dd = "0"+_dd
+	end
+	if tleng(_hh) < 2
+		_hh = "0" + _hh
+	end
+	if tleng(_mn) < 2
+		_mn = "0" + _mn
+	end
+	if tleng(_ss) < 2
+		_ss = "0"+_ss
+	end
+	date_time_str = _yyyy + _mm + _dd + "_" + _hh + _mn + _ss
+
+	n_par = txarraygetsize(file_par_list)
+	file_data_ = file_data
+	for _jj = 1 to n_par
+
+		_par_name = file_par_list[_jj]
+		_par_value = file_data:{<_par_name>}
+		if txwo(_par_name,ref_par_name) =0
+			_par_value = RSamp(_par_value , ref_par)
+			SetTime(_par_value,T0_ref)
+			file_data_:{<_par_name>} = _par_value
+		else
+			file_data_:{<_par_name>} = _par_value
+		end
+	end
+	
+	
+	;store
+	if store = 1
+		sicherungsfile_csv = txreplace(event_folder_ii,"\event\","\Output\ToInflux\",1,0) 
+		sicherungsfile_csv = tteil(sicherungsfile_csv,1,tleng(sicherungsfile_csv)-1) + "_"+ date_time_str + ".csv"
+		sicherungsfolder = fssplitPath(sicherungsfile_csv,8) 
+		_status = FsCreateDirectory(sicherungsfolder)
+		wenn _status <>0
+			_error = FsGetLastError()
+		ende
+		wenn lang?(file_data_:[1]) > 0 
+			SetDataFormat (file_data_, 0, 0, 0 ) 
+			_fileid = FileOpenAscii2(sicherungsfile_csv, "Parameter_TimeSeries",1)
+			_err = FileObjWrite(_fileid,file_data_)
+			_err = FileClose(_fileid)
+		ende
+	end
+	
+	for _jj = 1 to GrChanNum?(sonogram_data)
+		sono_name = GrChanName?(sonogram_data,_jj)
+		sequenz create_gtkues_sonogram_png sono_name
+	end
+end
+FsFileListClose(_folder_id)
+
+cwselectmode("variable")
+cwselectwindow(folder_ratio)
+CwAction("win.close")
+
+cwselectmode("variable")
+cwselectwindow(file_ratio)
+CwAction("win.close")
+
+
+; import to influxdb
+if import_to_influxdb = 1
+	OpMode = "Manual"
+	path_assetfolder_selected = "C:\BDA\AssetFolderSelected.txt"
+	_fh = FileOpenASCII(path_assetfolder_selected,1)
+	if _fh > 0
+		_err = FileLineWrite(_fh,AssetFolder,0)
+		_err = FileLineWrite(_fh,OpMode,0)
+		_err = FileClose(_fh)
+	sonst
+		_err = FileErrCode?() 
+		zeigen _err
+	ende
+	ret = Execute( "C:\BDA\AI\Start_ImportData2InfluxDB.bat","" , "", 2,-1)
+
+	; create statistics reports
+	ret = Execute( "C:\BDA\AI\Start_AnalyticsReport.bat","" , "", 2,-1); analytics report creation parallel start
+end
+
+
+
+

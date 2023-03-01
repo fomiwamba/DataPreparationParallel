@@ -1,0 +1,36 @@
+;sequenz CleanAndScaleSuesMeasurementData
+; Input: Sues_Signal -> _Varname in V
+; Ouptut: Sues_Signal in EU
+
+
+Channel_EU = ""
+Channel_Sensitivity = 1
+n = UserPropCount?({<_VarName>})
+i = 1
+WHILE i <= n
+	TxName = UserPropName?({<_VarName>}, i)
+	TxValue = UserPropText?({<_VarName>}, TxName)
+	if tverg(Txname,"EU") = 0
+		Channel_EU = TxValue
+	end
+	if tverg(Txname,"SensorSensitivity_V_EU") = 0
+		Channel_Sensitivity = tzuew(TxValue,"a")
+	end
+	if tverg(Channel_EU,"m") =0
+		Channel_ScalingFactor = 1000000/Channel_Sensitivity	; µm/V
+		Channel_Unit = "µm"
+	elseif tverg(Channel_EU,"m/s") =0
+		Channel_ScalingFactor = 1000/Channel_Sensitivity	; mm/s/V
+		Channel_Unit = "mm/s"
+	elseif tverg(Channel_EU,"mm") =0
+		Channel_ScalingFactor = 1000/Channel_Sensitivity	; µm/V
+		Channel_Unit = "µm"
+	else; bar, %
+		Channel_ScalingFactor = Channel_Sensitivity	; mm/s/V
+		Channel_Unit = Channel_EU
+	end
+ 
+	i = i+1
+END
+{<_VarName>} = {<_VarName>} * Channel_ScalingFactor
+seteinheit({<_VarName>},Channel_Unit,1)

@@ -1,0 +1,121 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Funktion zur Extraktion der Breitbandsenergiewert eines Spektrums
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sequenz imc_logging "freq_value_schnitt_fft started"
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Inputs
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_Ax_trend = PA1; Amplitude spectrum (fft_mag, frf_mag, psd)
+_Px_trend = PA2; Phase spectrum (fft_ph, frf_ph)
+_Cx_trend = PA3; Coherence spectrum (frf_coh)
+_Freqname = PA4; 
+_spetrum_name = PA5; fft, frf, psd
+;_rms_v = PA5; Aktivierung der Frequenzintegration zur RMS-Wertbildung
+
+FrequencyWindow_Hz = 0
+sequenz search_item Asset_Props:Name "FrequencyWindow_Hz"
+if search_index <>0
+	FrequencyWindow_Hz = tzuew (Asset_Props:Val[search_index],"a")
+ende
+if FrequencyWindow_Hz = 0
+	_freq_window = 3 * _deltaf
+else
+	_freq_window = FrequencyWindow_Hz
+end
+
+
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Vorbereitung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_nlinien = SegLang?(_Ax_trend)
+_spalte_laenge = lang?(_Ax_trend)/_nlinien
+_deltaf = xdel?(_Ax_trend[1])
+
+_freqvalue = tzuew(_freqname,"f")/1000
+
+_spalte_counter = 1
+
+mag_freq_kask = leer
+peak_freq_kask = leer
+ph_freq_kask = leer
+coh_freq_kask = leer
+solange _spalte_counter <= round(_spalte_laenge,1)
+	_mag_spect = _Ax_trend[_spalte_counter];_Ax_trend[_spalte_counter];
+	
+	if lang?(_Px_trend) > 1
+		_ph_spect = _Px_trend[_spalte_counter];_Ax_trend[_spalte_counter];
+	else
+		_ph_spect = 0
+	ende
+	if lang?(_Cx_trend) > 1
+		_coh_spect = _Cx_trend[_spalte_counter];_Ax_trend[_spalte_counter];
+	else
+		_coh_spect = 0
+	ende
+	
+	_Fu =_Freqvalue - _freq_window
+	_Fo = _Freqvalue + _freq_window
+	_mag_spect = gren(_mag_spect,_Fu,_Fo); Amplitudespektrum fuer X
+	_ph_spect = gren(_ph_spect,_Fu,_Fo); Amplitudespektrum fuer X
+	_coh_spect = gren(_coh_spect,_Fu,_Fo); Amplitudespektrum fuer X
+	
+	_mag_freq = 0
+	_peak_freq = 0
+	_ph_freq =0
+	_coh_freq = 0
+	wenn lang?(_mag_spect) < 1 
+		_mag_freq = 0
+		_peak_freq = 0
+		_ph_freq =0
+		_coh_freq = 0
+	sonst
+		_mag_freq = max(_mag_spect)
+		_peak_freq = posi(_mag_spect,_mag_freq)
+		if lang?(_ph_spect) > 0
+			_ph_freq = wert(_ph_spect,_peak_freq)
+		ende
+		if lang?(_coh_spect) > 0
+			;_coh_freq =  wert(_coh_spect,_peak_freq)
+			_coh_freq =  max(_coh_spect)
+		ende
+	ende
+	mag_freq_kask = binde(mag_freq_kask,_mag_freq)
+	peak_freq_kask = binde(peak_freq_kask,_peak_freq)
+	ph_freq_kask = binde(ph_freq_kask,_ph_freq)
+	coh_freq_kask = binde(coh_freq_kask,_coh_freq)
+	
+	_spalte_counter = _spalte_counter + 1
+ende
+
+_unit_sig = einheit?(_Ax_trend,1)
+seteinheit (mag_freq_kask,_unit_sig,1)
+_unit_sig = einheit?(_Px_trend,1)
+seteinheit (ph_freq_kask,_unit_sig,1)
+seteinheit (coh_freq_kask,"-",1)
+seteinheit (peak_freq_kask,"Hz",1)
+
+
+if lang?(_Ax_trend) > 1  
+	freq_peak_name = _spetrum_name + "_peak_" + _Freqname
+	freq_mag_name =  _spetrum_name + "_mag_" + _Freqname
+	{<freq_peak_name>} = peak_freq_kask
+	Feature:{<freq_peak_name>} = {<freq_peak_name>} 
+	{<freq_mag_name>} = mag_freq_kask
+	Feature:{<freq_mag_name>} = {<freq_mag_name>} 
+ende
+if lang?(_Px_trend) > 1  
+	freq_ph_name =  _spetrum_name + "_ph_" + _Freqname
+	{<freq_ph_name>} = ph_freq_kask
+	Feature:{<freq_ph_name>} = {<freq_ph_name>} 
+ende
+if lang?(_Cx_trend) >1
+	freq_coh_name =  _spetrum_name + "_coh_" + _Freqname
+	{<freq_coh_name>} = coh_freq_kask
+	Feature:{<freq_coh_name>} = {<freq_coh_name>} 
+ende
+
+;sequenz UpdateDataList
+
+;zeigen Feature:{<freq_coh_name>}

@@ -1,0 +1,177 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;sequenz ProcessChannel
+; inputs: AssetFolder, filename -> sicherungsfile_dat, ChannelNo -> _kk, Tachochannel, TachoChannelNameIst
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+entf *
+standard = 1
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Read Inputs
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+input_file = "C:\BDA\DataPreparation\ProcessChannelInput.txt"
+_fh= FileOpenASCII(input_file,0 )
+if _fh > 0
+	_TxZeile = ""
+	_ok = 0
+	_count = 0
+	solange _ok = 0
+		_ok = FileLineRead( _fh, _TxZeile, 0 )
+		if _ok = 0 
+			if _count = 0
+				AssetFolder = _TxZeile
+			elseif _count = 1
+				filename = _TxZeile
+			elseif _count = 2
+				SonderMessung = tzuew(_TxZeile,"a")
+			elseif _count = 3
+				CreateCSVFromEvent = tzuew(_TxZeile,"a")
+			elseif _count = 4
+				sues = tzuew(_TxZeile,"a")
+			elseif _count = 5
+				Tachochannel = tzuew(_TxZeile,"a")
+			elseif _count = 6
+				channelno = tzuew(_TxZeile,"a")
+			ende
+		ende
+		_count = _count + 1
+	ende
+	FileClose(_fh)
+sonst
+	_err = FileErrCode?() 
+	zeigen _err
+ende
+log_file = AssetFolder + "\" + "imc_log.txt"
+log_file_storage = AssetFolder + "\" + "imc_log_file.txt"
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Load AssetConfig
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if varexist?("AssetFolder") and varexist?("channelno")
+	; load Asset_Props
+	_file1 = AssetFolder + "\Asset_Props.dat"
+	_fh = FileOpenDSF(_file1,0)
+	wenn _fh > 0; and _filesize > 1000		
+		_VarName = FileObjName?(_fh, 1)
+		{<_VarName>} = FileObjRead(_fh, 1)	
+		_err = fileclose(_fh)
+	ende
+	; load Ch_Config
+	_file1= AssetFolder + "\Ch_Config.dat"
+	_fh = FileOpenDSF(_file1,0)
+	wenn _fh > 0; and _filesize > 1000		
+		_VarName = FileObjName?(_fh, 1)
+		{<_VarName>} = FileObjRead(_fh, 1)	
+		_err = fileclose(_fh)
+	ende
+	; load VMS_Freq_Table
+	_file1= AssetFolder + "\CorrTable.dat"
+	_fh = FileOpenDSF(_file1,0)
+	wenn _fh > 0; and _filesize > 1000		
+		_VarName = FileObjName?(_fh, 1)
+		{<_VarName>} = FileObjRead(_fh, 1)	
+		_err = fileclose(_fh)
+	ende
+	; load VMS_Freq_Table
+	_file1= AssetFolder + "\VMS_Freq_Table.dat"
+	_fh = FileOpenDSF(_file1,0)
+	wenn _fh > 0; and _filesize > 1000		
+		_VarName = FileObjName?(_fh, 1)
+		{<_VarName>} = FileObjRead(_fh, 1)	
+		_err = fileclose(_fh)
+	ende
+
+
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; Load Asset Measurement File
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	sequenz Loaddatfile_processchannel
+	; input: filename
+	; outputs: Data, date_time_str, OP_Data
+	MeasDate = ZeitInText((Zeit?(Data:[1]) + xoff?(Data:[1])),3)
+	sequenz date_to_string ; MeasDate -> Date_string
+	Data_Channel = Data
+	Date_ist = Date_string ; siehe sequenz filename2filedate, file_date_time -> trigger time of the channel/measurement
+	entf Data
+
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; Start Channel Analysis
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	_kk = channelno
+	ViSA_Parameter_Trend = Grneu();
+	ViSA_Data = Grneu();
+	ViSA_Matrix = Grneu();
+
+	; Get Channel Data
+	if _kk <= GrChanNum?(Data_Channel)
+		_VarName = GrKanalName?(Data_Channel,_kk)
+		sequenz search_item Ch_Config:SigName _VarName; search_index -> search the configuration of the current channel in the xlsconfig file
+	else
+		_VarName = "Channel_" +tform( channelno,"")
+		search_index = 0
+	ende
+		
+	wenn search_index > 0 ;and search_index <= TxArrayGetSize(Ch_Config:SigName); -> Channel Config vorhanden ???
+		channelXName = _varname
+
+		Feature:ChannelX = Data_Channel:[_kk];Feature:ChannelX =Data_Channel:{<_VarName>}	
+		_min_sig = min(Data_Channel:[_kk])
+		_max_sig = max(Data_Channel:[_kk])
+		_len_sig = lang?(Data_Channel:[_kk])
+		_tlen_sig = xdel?(Data_Channel:[_kk])*lang?(Data_Channel:[_kk])
+			
+		sequenz search_item Ch_Config:SigName _VarName; search_index -> search the configuration of the current channel in the xlsconfig file
+		_tlen_soll = tzuew(Ch_Config:Windowlength[search_index],"a")
+			
+		wenn _min_sig < _max_sig and _tlen_sig >= _tlen_soll; signal ist nicht konstant und Laenge vom Signal goesser Windowlength
+				
+			; Read Channel Config Feature
+			_kkk = search_index
+			sequenz ReadConfiguration_ProcessChannel
+	
+			; Identify T0 (Trigger Time)
+			DateTime_Wert = Zeit?(Data_Channel:[1]); + xoff?(Data_Channel:[1]); sonst gibt es probleme bei nichtzeitsynchronisierten Signalen
+			; siehe in TransformToDat -> _Messdatum = ZeitInText((Zeit?(Data:[1]) + xoff?(Data:[1])),3) -> dewesoft multifiles (sondermessung)
+					
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			; Start Channel Specific Data Analysis
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%			
+			wenn _kk = Tachochannel or txwo(ChannelXName,TachoChannelNameIst) <> 0; wenn channelname = channelpuls
+				sequenz SpeedAnalysis 0 Triglevel PulsPerRev windowlength overlap 
+			ende
+			sequenz VibrationSignatureAnalysis_TD 0;-> mv, min, max, peak, peak2peak, crest, kurtosis, histo_area, eff_a(all,lf,iso,hf), eff_v(all,lf,iso,hf)
+			sequenz VibrationSignatureAnalysis_FD 0
+				
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			; Datenspeicherung -> Store results
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		
+			sequenz store_diagnostic_features
+			
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			;# Collect Data for Barnwood
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			wenn  CreateCSVFromEvent = 1; 
+				sequenz collect_event_data_for_export
+			ende
+
+			entf Feature
+			entf ViSA_Matrix
+			entf ViSA_Parameter_Trend 
+			entf ViSA_Data 		
+		sonst
+			_err = "signal ist zu kurz und/oder constant"
+			zeigen _err
+			_file = AssetFolder +"\"+"constant_short_channels.txt"; 
+			_txt = Date_ist + ": " + filename + " ---> " + _VarName
+			_fh1 = FileOpenASCII(_file,2)
+			_err = FileLineWrite(_fh1,_txt,0)
+			_err = FileClose(_fh1)
+		ende
+	else
+		_file = AssetFolder +"\"+"non_configured_channels.txt"; 
+		_txt = Date_ist + ": " +  filename + " ---> " + _VarName
+		_fh1 = FileOpenASCII(_file,2)
+		_err = FileLineWrite(_fh1,_txt,0)
+		_err = FileClose(_fh1)
+	ende
+ende

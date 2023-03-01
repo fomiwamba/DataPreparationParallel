@@ -1,0 +1,151 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Sequenz zur Motor Signature Analysis im Zeitbereich
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sequenz imc_logging "electrical_signature_analysis started"
+; Input: 
+valve_esa = 1
+sequenz search_item Asset_Props:Name "Valve_Esa"
+if search_index <>0
+	valve_esa = tzuew (Asset_Props:Val[search_index],"a")
+ende
+
+component_is_valve = 0
+sequenz search_item Asset_Props:Name "component_is_valve"
+if search_index <>0
+	component_is_valve = tzuew (Asset_Props:Val[search_index],"a")
+ende
+if component_is_valve = 0
+	valve_esa = 1
+ende
+
+; valve_esa = 0 -> esa algorithms
+; valve_esa = 1 -> siplug algorithms
+; COLLECT ELECTRICAL SIGNAL FROM DATA_CHANNEL
+_signamelist = txArrayCreate( 0)
+_signamelist[1] = "U1"
+_signamelist[2] = "U2"
+_signamelist[3] = "U3"
+_signamelist[4] = "I1"
+_signamelist[5] = "I2"
+_signamelist[6] = "I3"
+_xyz = 1
+u_sig_list = 0
+i_sig_list =  0
+solange _xyz <= 6
+	_signame = _signamelist [_xyz]
+	sequenz search_item Ch_Config:ESA_Channel _signame ; search_index -> search the configuration of the current channel in the xlsconfig file
+	wenn search_index > 0
+		_ChannelName = Ch_Config:SigName[search_index]
+		if _xyz = 1
+			;_T_fenster = 4;_windowlength*xdel?(U_sig0:[1]); Fensterbreite, _length
+			_T_fenster = tzuew(Ch_Config:Windowlength[search_index],"a")
+			_overlap = tzuew(Ch_Config:Overlap[search_index],"a")
+			ind_channelPuls = Ch_Config:TachoChannel[search_index]
+			_Triglevel =  tzuew(Ch_Config:TrigLevel[search_index],"a")
+			_PulsPerRev =  tzuew(Ch_Config:PulsPerRev[search_index],"a")
+		ende
+		wenn _xyz <= 3
+			U_data:{<_signame>} = Data_Channel:{<_ChannelName>}
+			u_sig_list = GrKanalZahl?(U_data)
+		sonst
+			I_data:{<_signame>} = Data_Channel:{<_ChannelName>}
+			i_sig_list =  GrKanalZahl?(I_data) 
+		ende
+	ende
+	_xyz = _xyz + 1
+ende
+
+if  u_sig_list >= 3 and i_sig_list >= 3
+	
+	streamingfeatureextraction = 1; 1 for feature extraction or 0 for esa_analysis
+	;	if streamingfeatureextraction = 1 and _T_fenster < 1
+	;		siplug = 0
+	;	ende
+	;valve_esa = 0
+	
+	sequenz ESA_Processing_streaming; ESA_Processing
+
+	; DATENSPEICHERUNG
+	sicherungsfile_csv = output_verz_esa +"\"+"ESA_Parameter_"+Date_ist+".csv"; 
+	_fileid = FileOpenAscii2(sicherungsfile_csv, "Parameter_TimeSeries",1)
+	if component_is_valve = 1
+		if  valve_esa = 1 
+			if grkanalzahl?(ESA_Data)> 0
+				_err = FileObjWrite(_fileid,ESA_Data)
+			ende
+		else
+			if grkanalzahl?(ESA_Siplug)> 0
+				_err = FileObjWrite(_fileid,ESA_Siplug)
+			ende
+		ende
+		
+	else
+		if grkanalzahl?(ESA_Data)> 0
+			_err = FileObjWrite(_fileid,ESA_Data)
+		ende
+	ende
+	_err = FileClose(_fileid)	
+	
+	if EventNum?(U1_kask)> 0 and EventNum?(I1_kask)> 0
+		sicherungsfile_csv = output_verz_esa +"\"+"U1_esa_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,U1_kask)
+		_err = FileClose(_fileid)	
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"U2_esa_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,U2_kask)
+		_err = FileClose(_fileid)		
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"U3_esa_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,U3_kask)
+		_err = FileClose(_fileid)		
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"I1_esa_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,I1_kask)
+		_err = FileClose(_fileid)		
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"I2_esa_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,I2_kask)
+		_err = FileClose(_fileid)		
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"I3_esa_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,I3_kask)
+		_err = FileClose(_fileid)	
+	ende
+	if EventNum?(U1_demod_kask)> 0 and EventNum?(I1_demod_kask)> 0
+		sicherungsfile_csv = output_verz_esa +"\"+"U1_demod_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,U1_demod_kask)
+		_err = FileClose(_fileid)	
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"U2_demod_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,U2_demod_kask)
+		_err = FileClose(_fileid)		
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"U3_demod_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,U3_demod_kask)
+		_err = FileClose(_fileid)		
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"I1_demod_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,I1_demod_kask)
+		_err = FileClose(_fileid)		
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"I2_demod_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,I2_demod_kask)
+		_err = FileClose(_fileid)		
+	
+		sicherungsfile_csv = output_verz_esa +"\"+"I3_demod_fft_mag_"+Date_ist+".csv"; 
+		_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		_err = FileObjWrite(_fileid,I3_demod_kask)
+		_err = FileClose(_fileid)	
+	ende
+ende

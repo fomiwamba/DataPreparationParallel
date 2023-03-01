@@ -1,0 +1,57 @@
+;sequenz Import_Kues_OPData.seq
+
+sequenz imc_logging "import_kues_opdata started"
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; IMPORT PROCESS DATA
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;assetfolder = "D:\Projekte\CNT_SUES"
+;assetfolder = "D:\Projekte\SUES_OL3_HFT2"
+
+Idx = PnGetSelectedItem("AssetFolderList")
+assetfolder = PnGetItemText("AssetFolderList",Idx)
+
+op_data_main_folder = assetfolder + "\lpmsopdata\"
+op_file_list = FsGetFileNames(op_data_main_folder,"lpmsopdata.txt",0,1,1)
+anz_op_files = TxArrayGetSize(op_file_list)
+
+for _k = 1 to anz_op_files
+	op_file = op_file_list[_k]
+	
+	if FsFileExists(op_file) and txwo(op_file,".txt") > 0
+		template = 3
+		sequenz LoadCsvFile op_file template; -> OP_Data, 
+			
+		op_list_old = TxArrayCreate(0)
+			
+		if GrKanalZahl?(OP_Data) > 0
+			anz_op = GrChanNum?(OP_Data)
+			for _ijk = 1 to anz_op
+				opname = GrChanName?(OP_Data,_ijk)
+				op_list_old[_ijk] = opname
+				opname_ = tteil(opname,1,9)
+				OP_Data:{<opname_>} = OP_Data:[_ijk]
+			end
+			for _ijk = 1 to TxArrayGetSize(op_list_old)
+				opname = op_list_old[_ijk]
+				GrChanDel(OP_Data,opname)
+			end
+			MeasDate = ZeitInText((Zeit?(OP_Data:[1]) + xoff?(OP_Data:[1])),3)
+			sequenz date_to_string ; _Messdatum -> Date_string
+			
+			sicherungsfolder = AssetFolder + "\ProcessFiles\"
+			file1 ="ProcessData_"+Date_string
+			sicherungsfile_csv = sicherungsfolder + File1 + ".csv";
+			sequenz store_csv_parameter_file ; sicherungsfile, OP_Data
+		ende
+		
+		; Move to \TransformedProcessFiles\
+		_outfolder = assetfolder + "\TransformedProcessFiles\"
+		_status = FsCreateDirectory(_outfolder)
+		wenn _status <>0
+			_error = FsGetLastError()
+		ende
+		_outfile = _outfolder + FsSplitPath(op_file,4)
+		_erg = FsMoveFile(op_file,_outfile,2,0)
+	ende
+ende

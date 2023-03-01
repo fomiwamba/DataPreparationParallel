@@ -1,0 +1,31 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Input: AssetFolderSelected.txt
+; Output: AssetFolderList - DropDownMenu
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+sequenz imc_logging "load_asset_folder_selected started"
+
+path_assetfolder_selected = "C:\BDA\AssetFolderSelected.txt"
+
+_fh= FileOpenASCII(path_assetfolder_selected,0 )
+if _fh > 0
+	_TxZeile = ""
+	_ok = 0
+	_count = 0
+	solange _ok = 0
+		_ok = FileLineRead( _fh, _TxZeile, 0 )
+		if _ok = 0 
+			if _count = 0
+				AssetFolder = _TxZeile
+			elseif _count = 1
+				OpMode = _TxZeile
+			ende
+		ende
+		_count = _count + 1
+	ende
+	FileClose(_fh)
+sonst
+	_err = FileErrCode?() 
+	zeigen _err
+ende
+

@@ -1,0 +1,279 @@
+sequenz imc_logging "vibration_signature_analysis_fd started"
+
+; Identify T0 (Trigger Time)
+DateTime_Wert = Zeit?(Data_Channel:[1]); + xoff?(Data_Channel:[1]); sonst gibt es probleme bei nichtzeitsynchronisierten Signalen
+; Envelope Calculation
+wenn BPFu > 0 and BPFo > 0 and BPFo > BPFu and TPF > 0 and EnvType >= 1 and EnvType <= 3 and envelopeanalysis = "ON"
+	if PA1 = 1
+		step_ = "envelope calculation"
+		PnSetText("Step",step_)
+	ende
+	
+	wenn lang?(Feature:ChannelX) <> 0
+		sequenz HuellkurveBerechnung Feature:ChannelX BPFu BPFo TPF EnvType
+		Feature:ChannelX_Env = Feature:env_sig
+		sequenz SignaleGleichSetzen Feature:ChannelX Feature:ChannelX_Env
+		Feature:ChannelX = _sig1
+		Feature:ChannelX_Env = _sig2
+		;entf Feature
+	ende	
+ende
+
+; FFT_Analysis
+wenn Length > 0 and Window >= 0 and Overlap >= 0 and Average >= 0 and PulsPerRev > 0 and fftanalysis = "ON"
+	if PA1 = 1
+		step_ = "fft analysis"
+		PnSetText("Step",step_)
+	ende
+	
+	wenn varexist?("Feature:channelpuls"); and Tachochannel <> -1
+		sequenz FFT_Analysis Feature:ChannelX Feature:ChannelPuls length window overlap average 0 
+		wenn varexist?("Feature:DateTime")
+		else
+			Feature:DateTime = DateTime_Wert + Feature:Tmittel_zk
+		ende
+		
+		if file_monitoring = 0 ; ->diagnosis
+			_WatchVarName_ = tadd(ChannelXName,"_A1X")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTV_A1X)
+			_WatchVarName_ = tadd(ChannelXName,"_P1X")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTV_P1X)
+			_WatchVarName_ = tadd(ChannelXName,"_A2X")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTV_A2X)
+			_WatchVarName_ = tadd(ChannelXName,"_P2X")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTV_P2X)
+			_WatchVarName_ = tadd(ChannelXName,"_A3X")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTV_A3X)
+			_WatchVarName_ = tadd(ChannelXName,"_P3X")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTV_P3X)
+			_WatchVarName_ = tadd(ChannelXName,"_A4X")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTV_A4X)
+			_WatchVarName_ = tadd(ChannelXName,"_P4X")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTV_P4X)
+			_WatchVarName_ = tadd(ChannelXName,"_SumAll")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:SumAll)
+			_WatchVarName_ = tadd(ChannelXName,"_Harmonics")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:Harmonics)
+			_WatchVarName_ = tadd(ChannelXName,"_SubSynchronous")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:SubSynchronous)
+			_WatchVarName_ = tadd(ChannelXName,"_Synchronous")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:Synchronous)
+			_WatchVarName_ = tadd(ChannelXName,"_NonSynchronous")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:NonSynchronous)
+			_WatchVarName_ = tadd(ChannelXName,"_RMSWhirl")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:Eow)
+			_WatchVarName_ = tadd(ChannelXName,"_FreqWhirl")			
+			ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:Fow)
+		end
+		
+	sonst
+		sequenz FFT_Analysis Feature:ChannelX 0 length window overlap average 0 
+		wenn varexist?("Feature:DateTime")
+		else
+			Feature:DateTime = DateTime_Wert + Feature:Tmittel_zk
+		ende
+	ende
+
+	_WatchVarName_ = tadd(ChannelXName,"_fft_mag")			
+	ViSA_Matrix:{<_WatchVarName_>} = Feature:Ax		
+		
+	_WatchVarName_ = tadd(ChannelXName,"_All")			
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTE_All)
+	_WatchVarName_ = tadd(ChannelXName,"_LF")			
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTE_LF)
+	_WatchVarName_ = tadd(ChannelXName,"_ISO")			
+	ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTE_ISO)
+	wenn Fmax > 1000
+		_WatchVarName_ = tadd(ChannelXName,"_HF")			
+		ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:FFTE_HF)
+	end
+	
+	
+	if file_monitoring = 0 ; ->diagnosis
+		_WatchVarName_ = tadd(ChannelXName,"_TH")			
+		ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:TH)
+				
+		if sues; store frequency parameters
+			if txarraygetsize(ch_psd_par_liste) > 0; wenn  varexist?(" Feature:ALDx")
+				_WatchVarName_ = ChannelXName + "_psd"			
+				ViSA_Matrix:{<_WatchVarName_>} = Feature:ALDx		
+			ende
+			if  txarraygetsize(ch_fft_par_liste) > 0
+				_WatchVarName_ = tadd(ChannelXName,"_fft_ph")	
+				ViSA_Matrix:{<_WatchVarName_>} = Feature:Px
+			ende
+
+			_vars = grkanalzahl?(Feature)
+			for _vari = 1 to _vars
+				_featname = grkanalname?(Feature,_vari)
+				if  txarraygetsize(ch_fft_par_liste) > 0
+					if txwo(_featname,"fft_peak_") <> 0 or txwo(_featname,"fft_mag_")  <> 0 or txwo(_featname,"fft_ph_")  <> 0  or txwo(_featname,"fft_rms_")  <> 0
+						_WatchVarName_ = ChannelXName + "_" + _featname
+						ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:{<_featname>})
+					ende
+				ende
+				if txarraygetsize(ch_psd_par_liste) > 0
+					if txwo(_featname,"psd_peak_") <> 0 or txwo(_featname,"psd_mag_")  <> 0
+						_WatchVarName_ = ChannelXName + "_" + _featname
+						ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:{<_featname>})
+					ende
+				ende
+			ende
+		ende
+	ende
+	
+	wenn varexist?("Feature:ChannelX_Env") and envelopeanalysis = "ON"
+		wenn varexist?("Feature:channelpuls");  and Tachochannel <> -1
+			sequenz FFT_Analysis Feature:ChannelX_Env Feature:ChannelPuls length window overlap average 1
+			_WatchVarName_ = tadd(ChannelXName,"_Speed_env")			
+			ViSA_Data:{<_WatchVarName_>} = Feature:drehzahl
+		sonst
+			sequenz FFT_Analysis Feature:ChannelX_Env 0 length window overlap average 0
+		ende
+		_WatchVarName_ = tadd(ChannelXName,"_Ax_env")			
+		ViSA_Matrix:{<_WatchVarName_>} = Feature:Ax_env		
+	ende	
+	
+ende
+
+
+if file_monitoring = 0 ; ->diagnosis
+	; FRF_Analysis
+	wenn Length > 0 and Window >= 0 and Overlap >= 0 and Average >= 0 and PulsPerRev > 0 and GrChanNum?(VMS_Freq_Table) > 0
+<<<<<<< HEAD
+		; txarraygetsize(FRF_ChY_List) > 0 and txarraygetsize(VMS_Freq_Table:ParName) > 1 and txarraygetsize(ch_frf_par_liste) > 0
+=======
+		;txarraygetsize(FRF_ChY_List) > 0 and txarraygetsize(VMS_Freq_Table:ParName) > 1 and txarraygetsize(ch_frf_par_liste) > 0
+>>>>>>> origin/master
+		if PA1 = 1
+			step_ = "frf analysis"
+			PnSetText("Step",step_)
+		ende
+	
+		sequenz FRF_Analysis Feature ChannelXName FRF_ChY_List length window overlap average
+		wenn varexist?("Feature:DateTime")
+		else
+			Feature:DateTime = DateTime_Wert + Feature:Tmittel_zk
+		ende
+
+
+		for _ci = 1 to txarraygetsize(FRF_ChY_List)
+			_frf_chy = FRF_ChY_List[_ci]
+			_frf_ci_name = _frf_chy + "_frf_mag"
+			_WatchVarName_ = ChannelXName + "_" + _frf_ci_name			
+			ViSA_Matrix:{<_WatchVarName_>} = Feature:{<_frf_ci_name>}
+		
+			_frf_ci_name =  _frf_chy +  "_frf_ph"		
+			_WatchVarName_ = ChannelXName  + "_" + _frf_ci_name
+			ViSA_Matrix:{<_WatchVarName_>} = Feature:{<_frf_ci_name>}
+		
+			_frf_ci_name = _frf_chy +  "_frf_coh"	
+			_WatchVarName_ = ChannelXName + "_" + _frf_ci_name
+			ViSA_Matrix:{<_WatchVarName_>} = Feature:{<_frf_ci_name>}
+		ende
+
+		_vars = grkanalzahl?(Feature)
+		for _ci = 1 to _vars
+			_featname= GrChanName?(Feature,_ci)
+			if txwo(_featname,"frf_peak_") <> 0 or txwo(_featname,"frf_mag_")  <> 0 or txwo(_featname,"frf_ph_")  <> 0 or txwo(_featname,"frf_coh_")  <> 0
+				
+				_WatchVarName_ = ChannelXName + "_" + _featname
+				ViSA_Parameter_Trend:{<_WatchVarName_>} = xyvon(Feature:DateTime,Feature:{<_featname>})
+			ende
+		ende
+	ende
+ende
+
+if 0
+	; Order Analysis
+	Omax = SampPerRev/2
+	dO = 1/pam
+	wenn Length > 0 and Window >= 0 and Overlap >= 0 and Average >= 0 and PulsPerRev > 0 and Omax >= 10 and dO <= 0.5 and orderanalysis = "ON"
+		if PA1 = 1
+			step_ = "order analysis"
+			PnSetText("Step",step_)
+		ende
+	
+		wenn varexist?("Feature:channelpuls"); and Tachochannel <> -1
+			_pulssignal = Feature:ChannelPuls - TrigLevel
+			OtrTachoMode(3, 0, PulsPerRev, 0)
+			_speed0 = OtrTachoToSpeed(_pulssignal)
+			wenn mean(_speed0) > 1
+				sequenz SignaleGleichSetzen Feature:ChannelX _pulssignal
+				_vibsignal = _sig1
+				_pulssignal = _sig2
+				_rs = OtrResample(_vibsignal,_pulssignal,_Omax ,1)
+				_Tgesamt = ganz(lang?(_rs))
+				_T_fenster = _SampPerRev*_pam
+				nn_mit_overlap = ganz((_Tgesamt-_overlap/100*_T_fenster)/(_T_fenster-_overlap/100*_T_fenster)); Anzahl der Iteration
+				wenn nn_mit_overlap < 0
+					BoxNachricht("Configuration error","Please reduce the number of samples per revolution","?1")
+				sonst
+					sequenz SignaleGleichSetzen Feature:ChannelX Feature:ChannelPuls
+					Feature:ChannelX = _sig1
+					Feature:ChannelPuls = _sig2
+					sequenz Order_Analysis Feature:ChannelX Feature:ChannelPuls SampPerRev pam window overlap PulsPerRev 0
+					_WatchVarName_ = tadd(ChannelXName,"_OAx")	
+					ViSA_Matrix:{<_WatchVarName_>} = Feature:OAx
+					;				_WatchVarName_ = tadd(ChannelXName,"_OPx")	
+					;				ViSA_Matrix:{<_WatchVarName_>} = Feature:OPx				
+				
+					_WatchVarName_ = tadd(ChannelXName,"_OAx_averaged")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:OAx_averaged
+					_WatchVarName_ = tadd(ChannelXName,"_OPx_averaged")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:OPx_averaged
+					_WatchVarName_ = tadd(ChannelXName,"_OSPeed")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:OSPeed
+					_WatchVarName_ = tadd(ChannelXName,"_BodeO1")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeO1
+					_WatchVarName_ = tadd(ChannelXName,"_BodeO2")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeO2
+					_WatchVarName_ = tadd(ChannelXName,"_BodeO3")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeO3
+					_WatchVarName_ = tadd(ChannelXName,"_BodeO4")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeO4
+					_WatchVarName_ = tadd(ChannelXName,"_BodeO5")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeO5
+					_WatchVarName_ = tadd(ChannelXName,"_BodeP1")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeP1
+					_WatchVarName_ = tadd(ChannelXName,"_BodeP2")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeP2
+					_WatchVarName_ = tadd(ChannelXName,"_BodeP3")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeP3
+					_WatchVarName_ = tadd(ChannelXName,"_BodeP4")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeP4
+					_WatchVarName_ = tadd(ChannelXName,"_BodeP5")	
+					ViSA_Data:{<_WatchVarName_>} = Feature:BodeP5
+				
+				
+					wenn varexist?("Feature:ChannelX_Env") and envelopeanalysis = "ON"
+						sequenz Order_Analysis Feature:ChannelX_Env Feature:ChannelPuls SampPerRev pam window overlap PulsPerRev 1
+						_WatchVarName_ = tadd(ChannelXName,"_OAx_env")	
+						ViSA_Matrix:{<_WatchVarName_>} = Feature:OAx_env					
+					
+						_WatchVarName_ = tadd(ChannelXName,"_OSPeed_env")	
+						ViSA_Data:{<_WatchVarName_>} = Feature:OSPeed_env
+						_WatchVarName_ = tadd(ChannelXName,"_OAx_averaged_env")	
+						ViSA_Data:{<_WatchVarName_>} = Feature:OAx_averaged_env
+						_WatchVarName_ = tadd(ChannelXName,"_BodeO1_env")	
+						ViSA_Data:{<_WatchVarName_>} = Feature:BodeO1_env
+						_WatchVarName_ = tadd(ChannelXName,"_BodeO2_env")	
+						ViSA_Data:{<_WatchVarName_>} = Feature:BodeO2_env
+						_WatchVarName_ = tadd(ChannelXName,"_BodeO3_env")	
+						ViSA_Data:{<_WatchVarName_>} = Feature:BodeO3_env
+						_WatchVarName_ = tadd(ChannelXName,"_BodeO4_env")	
+						ViSA_Data:{<_WatchVarName_>} = Feature:BodeO4_env
+						_WatchVarName_ = tadd(ChannelXName,"_BodeO5_env")	
+						ViSA_Data:{<_WatchVarName_>} = Feature:BodeO5_env
+					
+					ende
+				ende
+			ende
+		ende
+	ende
+ende
+
+
+if PA1 = 1
+	sequenz UpdateDataList
+ende

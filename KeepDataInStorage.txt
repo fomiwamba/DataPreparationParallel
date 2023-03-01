@@ -1,0 +1,28 @@
+sequenz imc_logging "load_dat_file started"
+
+ChannelListe = GrNeu()
+
+			
+
+wenn varexist?("Feature:channelpuls")
+	DlgSelectItem("ChannelPuls", 1)
+ende
+
+wenn _count > 1
+	DlgSelectItem("ChannelX", 1)
+	_Parname = DlgGetItemText("ChannelX", 1)
+	ChNameIst = _Parname;
+	ChannelX = {<_Parname>}
+	Feature:ChannelX = ChannelX
+
+	DlgSelectItem("ChannelY", 2)
+	_Parname = DlgGetItemText("ChannelY", 2)
+	ChannelY = {<_Parname>}
+	Feature:ChannelY = ChannelY
+
+	sequenz UpdateDataList
+
+	_kkk = 1; Kanal 1 ausgewählt
+	sequenz ReadConfiguration
+	;sequenz UpdateDataList
+ende

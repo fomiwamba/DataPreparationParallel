@@ -1,0 +1,120 @@
+sequenz imc_logging "open_and_clean_dat_file started"
+
+k1 = 0
+k2 = 0
+k3 = 0
+_fh = FileOpenDSF(_filename,100)
+if _fh > 0
+	_objzahl = FileObjNum?(_fh)
+	_count = 1
+	Data = grneu()
+	solange _count <= _objzahl
+		
+		channel_ratio = floor(_count/_objzahl*100) 
+		seteinheit(channel_ratio,"%",1)
+		zeigen channel_ratio
+		
+		_objtype = FileObjType?(_fh,_count)
+		wenn _objtype = 1
+			_parname = FileObjName?(_fh,_count)
+			;zeigen _parname
+			{<_parname>} = FileObjRead(_fh,_count)
+
+			sequenz Insert_Item "Channellist" _parname
+			
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			; change chunit -> SI EU
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			wenn 1; Einheitsumrechnung, Rescaling, Cleaning, Offset Correction, etc.
+				wenn Einheit?({<_Parname>},1)="�m"
+				end
+				wenn Einheit?({<_Parname>},1)="mm"
+					{<_Parname>} = {<_Parname>}*10^3
+					seteinheit({<_Parname>},"�m",1)
+				end
+				wenn Einheit?({<_Parname>},1)="m"
+					{<_Parname>} = {<_Parname>}*10^6
+					seteinheit({<_Parname>},"�m",1)
+				end
+				wenn Einheit?({<_Parname>},1)="mm/s"
+				end
+				wenn Einheit?({<_Parname>},1)="m/s"
+					{<_Parname>} = {<_Parname>}*10^3
+					seteinheit({<_Parname>},"mm/s",1)
+				end
+				;					wenn Einheit?({<_Parname>},1)="g"
+				;						{<_Parname>} = {<_Parname>}*9.81
+				;						seteinheit({<_Parname>},"m/s^2",1)
+				;					end
+			end
+			
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			;change chlength
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				
+				
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			;change chname
+			;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+			
+			_txt2find1 = "_";"_T01" 
+			_txt2find2 = "-";"_T01" 
+			_txt2find3 = ":";"_T01" 
+			_txt2find4 = ".";"_T01" 
+			_pos1 = TxWhere(_parName,_txt2find1)
+			_pos2 = TxWhere(_parName,_txt2find2)
+			_pos3 = TxWhere(_parName,_txt2find3)
+			_pos4= TxWhere(_parName,_txt2find4)
+			if _pos1 > 0 or _pos2 > 0 or _pos3 > 0 or _pos4 > 0
+				_parname1 = TReplace(_parName,_txt2find1,"")
+				_parname1 = TReplace(_parname1,_txt2find2,"")
+				_parname1 = TReplace(_parname1,_txt2find3,"")
+				_parname1 = TReplace(_parname1,_txt2find4,"")
+			end
+			entf _pos1
+			entf _pos2
+			entf _pos3
+			entf _pos4
+			if varexist?("_parname1")
+
+				_pos1 = TxWhere(_parname1,_txt2find1)
+				_pos2 = TxWhere(_parname1,_txt2find2)
+				_pos3 = TxWhere(_parname1,_txt2find3)
+				_pos4= TxWhere(_parname1,_txt2find4)
+				if _pos1 > 0 or _pos2 > 0 or _pos3 > 0 or _pos4 > 0
+					_parname2 = TReplace(_parname1,_txt2find1,"")
+					_parname2 = TReplace(_parname2,_txt2find2,"")
+					_parname2 = TReplace(_parname2,_txt2find3,"")
+					_parname2 = TReplace(_parname2,_txt2find4,"")
+				end
+			ende
+			if varexist?("_parname2")
+				{<_parname2>} = {<_parname>}
+				;GrChanAppend(Data_New,<TxName_new>)
+				Data:{<_parname2>} = {<_parname>}
+				_parname = _parname2
+				{<_parname>} = {<_parname2>}
+			elseif varexist?("_parname1")
+				{<_parname1>} = {<_parname>}
+				;GrChanAppend(Data_New,<TxName_new>)
+				Data:{<_parname1>} = {<_parname>}
+				_parname = _parname1
+				{<_parname>} = {<_parname1>}
+			Else
+				;GrChanAppend(Data_New,<TxName>)
+				Data:{<_parname>} = {<_parname>}
+			End
+			sequenz Insert_Item "Channellist" _parname
+			
+			entf _parname1
+			entf _parname2
+			
+		ende
+		
+		_count = _count + 1
+	ende
+	_ew = fileclose(_fh)
+sonst
+	_err = FileErrCode?() 
+	zeigen _err
+ende

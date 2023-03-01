@@ -1,0 +1,18 @@
+sequenz imc_logging "date_to_string started"
+
+_Tag_ = TTeil(MeasDate,1,2)
+_Tag=TzuEW(_Tag_,"e")
+_Monat_ = TTeil(MeasDate,4,2)
+_Monat=TzuEW(_Monat_,"e")
+_Jahr_ = TTeil(MeasDate,7,4)
+_Jahr=TzuEW(_Jahr_,"e")
+			
+_Stun_ = TTeil(MeasDate,12,2)
+_Stun=TzuEW(_Stun_,"e")
+_Min_ = TTeil(MeasDate,15,2)
+_Min=TzuEW(_Min_,"e")
+_Sek_ = TTeil(MeasDate,18,2)
+_Sek=TzuEW(_Sek_,"e")
+			
+MeasDate_zahl=ZeitBinde(_Tag,_Monat,_Jahr,_Stun,_Min,_Sek)
+Date_string = _Jahr_+_Monat_+_Tag_+"_"+_Stun_+_Min_+_Sek_

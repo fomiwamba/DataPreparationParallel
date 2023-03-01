@@ -1,0 +1,13 @@
+sequenz imc_logging "update_data_list started"
+_kk0 = 1
+_anzKanaele = GrKanalZahl?(Feature)
+solange _kk0 <= _anzKanaele
+	_VarName = GrKanalName?(Feature,_kk0)
+	{<_VarName>} =Feature:{<_VarName>}
+	
+	_Chindex = PnFindItem("FeatureList",_VarName)
+	wenn _Chindex = 0
+		PnInsertItem("FeatureList",0,_VarName,0)
+	ende
+	_kk0 = _kk0 + 1
+ende

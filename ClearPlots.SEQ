@@ -1,0 +1,54 @@
+; sequenz clear curvemanager
+sequenz imc_logging "clear plots started"
+
+CwSelectMode("title")
+wenn PA1 = 1
+	_ret = CwIsWindow("plot1")
+ende
+wenn PA1 = 2
+	_ret = CwIsWindow("plot2")
+ende
+wenn PA1 = 3
+	_ret = CwIsWindow("plot3")
+ende
+wenn PA1 = 4
+	_ret = CwIsWindow("plot4")
+ende
+wenn PA1 = 5
+	_ret = CwIsWindow("plot5")
+ende
+wenn PA1 = 6
+	_ret = CwIsWindow("plot6")
+ende
+wenn _ret <> 0
+	wenn PA1 = 1
+		CwSelectWindow("plot1")
+	ende
+	wenn PA1 = 2
+		CwSelectWindow("plot2")
+	ende
+	wenn PA1 = 3
+		CwSelectWindow("plot3")
+	ende
+	wenn PA1 = 4
+		CwSelectWindow("plot4")
+	ende
+	wenn PA1 = 5
+		CwSelectWindow("plot5")
+	ende
+	wenn PA1 = 6
+		CwSelectWindow("plot6")
+	ende
+	
+	;CwAction("win.close")
+	CwAction("delete.lines")
+	CwAction("delete.markers")
+	CwAction("reset")
+	;CwNewWindow("xyplot","show")
+	;CwDeleteElement("line")
+	;CwDeleteElement("axis")
+	;CwDeleteElement("cosys")
+	;CwDeleteElement("marker")
+ende
+
+

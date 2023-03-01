@@ -1,0 +1,5 @@
+; sequenz set_accuracy
+old_acc = SetOption("Func.ResultFormat","Auto")
+setoption("Func.ResultFormat",old_acc)
+
+;SetDataFormat ( d7d_data, 0, 0, 0 ) 

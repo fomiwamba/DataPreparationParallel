@@ -1,0 +1,11 @@
+sequenz imc_logging "store_dat_file started"
+
+
+sicherungsfolder = fssplitPath(sicherungsfile_dat,8) 
+_status = FsCreateDirectory(sicherungsfolder)
+wenn _status <>0
+	_err = FsGetLastError()
+	zeigen _err
+ende
+SetDataFormat (Data, 0, 0, 0 ) 
+Filesave (sicherungsfile_dat, "", 1, Data)

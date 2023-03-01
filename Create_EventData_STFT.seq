@@ -1,0 +1,23 @@
+
+_pname = PA1; "U1_spec"
+_pvalue = PA2; U1_spec
+_punit = PA3;_unit_sig = PA3
+
+sequenz imc_logging "create_event_data_stft started"
+
+Ttrig = DateTime_Wert +_Tmittel		
+			
+seteinheit (_pvalue,"Hz",0)
+seteinheit(_pvalue,_punit,1)
+wenn _nn = 1				
+	{<_pname>} = EventNew(_pvalue,0)
+ende
+wenn _nn > 1
+	EventAppend({<_pname>},_pvalue,0)
+ende					
+_eventnr = EventNum?({<_pname>})
+									
+EventProp({<_pname>},_eventnr,0,Ttrig)
+
+;entf _Parname
+;entf {<_Parname>}

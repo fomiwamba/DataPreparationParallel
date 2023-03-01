@@ -1,0 +1,31 @@
+sequenz imc_logging "export_channel_list started"
+
+; create liste all channels in current meas file
+ChannelListe = grenindex(Data,1,1);
+_sicherungsfile = AssetFolder + "\channelliste.csv"
+_fileid = FileOpenAscii2(_sicherungsfile, "csv_export_channelliste",1)
+_err = FileObjWrite(_fileid,ChannelListe)
+_err = FileClose(_fileid)
+
+_sicherungsfile_2 = AssetFolder + "\channelliste\" + Date_string +".csv"
+sicherungsfolder_2 = fssplitPath(_sicherungsfile_2,8) 
+_status = FsCreateDirectory(sicherungsfolder_2)
+wenn _status <>0
+	_err = FsGetLastError()
+	zeigen _err
+ende
+_erg = FsCopyFile(_sicherungsfile,_sicherungsfile_2,2,0)
+
+; create liste all channels from all meas file
+AssetFolderIdx = PnGetSelectedItem("AssetFolderList")
+AssetFolder = PnGetItemText("AssetFolderList",AssetFolderIdx)
+path_assetfolder_selected = "C:\BDA\AssetFolderSelected.txt"
+_fh = FileOpenASCII(path_assetfolder_selected,1)
+if _fh > 0
+	_err = FileLineWrite(_fh,AssetFolder,0)
+	_err = FileClose(_fh)
+sonst
+	_err = FileErrCode?() 
+	zeigen _err
+ende
+ret = Execute( "C:\BDA\AI\Start_GetAllChannelsFromAsset.bat","" , "", 2,0)

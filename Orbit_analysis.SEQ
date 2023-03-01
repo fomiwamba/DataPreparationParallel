@@ -1,0 +1,321 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;	Sequenz zur Berechnung der Orbitskenngrößen sowie Gleich und Gegenläufe -> Biderectional spectrum
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sequenz imc_logging "orbit_analysis started"
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Inputs
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_signalx = PA1; Gehäuse oder Wellenbahnsignal in X-Richtung
+_signaly = PA2; Gehäuse oder Wellenbahnsignal in Y-Richtung
+_peak = 	PA3; Bezugsmarken Signal
+_windowlength = PA4;:windowlength[channelcount] ;2048;2^14; Anzahl der Abtastpunkten in einem Fenster
+_overlap = PA5;:overlap[channelcount] ; Überlappung
+_windowfft = PA6;:windowfft[channelcount] 
+_Fall = PA7;; fall = 2; (1, wenn x voreilend ist, 2 wenn y voreilend ist)
+;quasistationaer = 1 ;(1 if drehzahl = konst., sonst 0)
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Vorbereitung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_delme_signalx = einheit?(_signalx,1)
+_delme_signaly = einheit?(_signaly,1); einheit_sigx = einheit_sigy
+xOFFSET _signalx 0
+xOFFSET _signaly 0
+xoffset _peak 0
+
+wenn lang?(_peak)>2
+	sequenz SignaleGleichSetzen _signalx _peak
+	_signalx = _sig1
+	_peak = _sig2
+ende
+
+sequenz SignaleGleichSetzen _signalx _signaly
+_signalx = _sig1
+_signaly = _sig2
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;Rechenteil
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+_T_fenster = _windowlength*xdel?(_signalx); Fensterbreite
+_deltaf = 1/_T_fenster; Abtastzeit
+_Fs = 1/xdel?(_signalx); Abtastfrequenz
+_Tgesamt = lang?(_signalx)*xdel?(_signalx); Gesamte Messdauer
+wenn _T_fenster > _Tgesamt
+	_T_fenster = _Tgesamt
+ende
+_anzahl_it_mit_overlap = ganz((_Tgesamt-_overlap/100*_T_fenster)/(_T_fenster-_overlap/100*_T_fenster)); Anzahl der Iterationen mit Overlap-Fkt
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Zu berechnenden Orbitskenngrößen
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_G_kask = leer; Grosser Radius
+_K_kask = leer; Kleiner Radius
+_FRI_kask = leer; Orbitsform
+_phimax_kask = leer; Winkel des grossen Radius gegenüber Realteilachse (x-Achse)
+_Orbitindikator_kask = leer; Orbitsflaeche
+_x0_kask = leer; Mittelposition X-Richtung
+_y0_kask = leer; Mittelposition Y-Richtung
+_S0_kask = leer; Mittelposition Amplitude
+_phi0_kask = leer; Mittelposition Phase
+_xm_kask = leer; Dyn position X-Richtung
+_ym_kask = leer; Dyn position X-Richtung
+_Sm_kask = leer; Dyn position Amplitude
+_phim_kask = leer; Dyn position Phase
+
+_Sgmax_kask = leer; Max. Wellenausschlag
+_phigmax_kask = leer; Phase Max. Wellenausschlag
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Zu berechnenden Zwei-Seitigespektren
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_Basp_kask = leer; Bidirektional Amplitudespektrum
+_Bpsp_kask = leer; Bidirektional Phasenspektrum
+_drehzahl_kask = leer;
+_Tmittel_kask = leer;
+
+_nn = 1;
+SOLANGE _nn <= _anzahl_it_mit_overlap 
+	; Overlap theorie
+	;Tgesamt = _windowlength*Tfenster - (_windowlength-1)*Overlap*Tfenster
+	;Tbeginn = i*Tfenster - (i-1)*Overlap*Tfenster - Tfenster
+	;Tende = i*Tfenster - (i-1)*Overlap*Tfenster 
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;1) Zeitfenster Selektion
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if 1
+		_Tbeginn = (_nn-1)*_T_fenster-(_nn-1)*_overlap/100*_T_fenster
+		_Tende = _nn*_T_fenster-(_nn-1)*_overlap/100*_T_fenster;Tbeginn + T_fenster
+		_T_fenster_verifikation = _Tende-_Tbeginn
+		_N_beginn = floor(((_nn-1)-(_nn-1)*_overlap/100)*_windowlength);
+		_N_end = floor((_nn-(_nn-1)*_overlap/100)*_windowlength)-1
+		_Tmittel = (_Tende+_Tbeginn)/2
+		_Tmittel_kask = binde(_Tmittel_kask,_Tmittel)
+	
+		wenn _nn = 1
+			_x_g = grenindex(_signalx,(_nn-1)*_windowlength+1,_nn*_windowlength)
+			_y_g = grenindex(_signaly,(_nn-1)*_windowlength+1,_nn*_windowlength)
+			wenn lang?(_peak)>2
+				_peak_g = grenindex(_peak,(_nn-1)*_windowlength+1,_nn*_windowlength)
+			ende
+		sonst
+			;x_g = gren(_signalx,Tbeginn,Tende-xdel?(_signalx))
+			;y_g = gren(_signaly,Tbeginn,Tende-xdel?(_signalx))
+			;	peak_g = gren(_peak,Tbeginn,Tende-xdel?(_signalx)) 
+			_x_g = grenindex(_signalx,_N_beginn,_N_end)
+			_y_g = grenindex(_signaly,_N_beginn,_N_end)
+			wenn lang?(_peak)>2
+				_peak_g = grenindex(_peak,_N_beginn,_N_end)
+			ende
+		ende
+	ende
+	
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;2) Drehzahl und Drehfrequenzbestimmung -> F0, Drehzahl
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	wenn lang?(_peak)>2
+		_dp = diff(_peak_g)*xdel?(_peak_g)
+		_Tx = posiex(_dp,2); findet alle Zeiten, wo peak <= 0
+		_anz_peak = lang?(_Tx)
+		entf _dp
+		entf _Tx
+		
+		_Var = 2
+		sequenz Pulse2Speed _peak_g TrigLevel PulsPerRev 2
+		;zeigen drehzahl
+		_drehzahl_kask = binde(_drehzahl_kask,_drehzahl_mitte)
+	ende
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;6) Orbitsanalyse Time Domain
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if 1
+		; Gesamt Orbit -> Sgmax, phigmax
+		_G_orbit = xyvon(_x_g,_y_g)
+		_S = wurz(quad(_x_g-mitte(_x_g))+quad(_y_g-mitte(_y_g))); Wellenausschlag
+		_phi = atan2(_signaly,_signalx); Winkel 
+		_phi_kleiner_0 = oben(-1*_phi,0)
+		_wert_phi_kleiner_0 = wert(_phi,_phi_kleiner_0)
+		_wert_phi_kleiner_0_neu = _wert_phi_kleiner_0 + 2*PI
+		_phi = Setze(_phi,_phi_kleiner_0,_wert_phi_kleiner_0_neu)
+		_S_max = max(_S); max. Wellenausschlag
+		_pos_max = Posi(_S,_S_max)
+		_phi_max = Wert(_phi,_pos_max); Winkel des max. Wellenausschlags
+		_Sgmax = _S_max
+		_phigmax = _phi_max
+	
+	
+		; Mittelposition
+		_x0 = mitte(_x_g);
+		_y0 = mitte(_y_g);
+		_S0 = wurz(_x0^2+_y0^2);
+		_phi0 = atan2(_y0,_x0);
+		_phi0_kleiner_0 = oben(-1*_phi0,0)
+		_wert_phi0_kleiner_0 = wert(_phi0,_phi0_kleiner_0)
+		_wert_phi0_kleiner_0_neu = _wert_phi0_kleiner_0 + 2*PI
+		_phi0 = Setze(_phi0,_phi0_kleiner_0,_wert_phi0_kleiner_0_neu)
+		_phi0 = _phi0*180/pi;
+	
+		; Luftspalt = Lagerschaleradius - Sm;
+		_xm = _x0 + _Sgmax*cos(_phigmax*pi/180);
+		_ym = _y0 + _Sgmax*sin(_phigmax*pi/180);
+		_Sm = sqrt(_xm^2+_ym^2);
+		_phim = atan2(_ym,_xm);
+	
+	
+	
+		_x0_kask = binde(_x0_kask,_x0)
+		_y0_kask = binde(_y0_kask,_y0)
+		_S0_kask = binde(_S0_kask,_S0)
+		_phi0_kask = binde(_phi0_kask,_phi0)
+	
+		_xm_kask = binde(_xm_kask,_xm)
+		_ym_kask = binde(_ym_kask,_ym)
+		_Sm_kask = binde(_Sm_kask,_Sm)
+		_phim_kask = binde(_phim_kask,_phim)
+	
+		_Sgmax_kask = binde(_Sgmax_kask,_Sgmax)
+		_phigmax_kask = binde(_phigmax_kask,_phigmax)
+		
+		seteinheit(_x0_kask,_delme_signalx,1)
+		seteinheit(_y0_kask,_delme_signalx,1)
+		seteinheit(_S0_kask,_delme_signalx,1)
+		seteinheit(_xm_kask,_delme_signalx,1)
+		seteinheit(_ym_kask,_delme_signalx,1)
+		seteinheit(_Sm_kask,_delme_signalx,1)
+		seteinheit(_Sgmax_kask,_delme_signalx,1)
+	ende
+	
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;6) Orbitsanalyse Frequency Domain
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if 1
+		; Fourierkoeffizienten
+		_Ax = wurz(2)*kmp1(dftspectrum(_x_g-mitte(_x_g),_windowfft))
+		wenn lang?(_peak)>2
+			_px = (kmp2(FrequencyResponse(_peak_g,_x_g-mitte(_x_g),_windowlength,_windowfft,_overlap,2))+180)*inrad; Phasendifferenz zwischen X und Bezugssignal +180 -> Übereinstimmung mit lsq und fourieranalysator da peak nach unten zeigt
+		sonst
+			_px = kmp2(dftspectrum(_x_g-mitte(_x_g),_windowfft))
+		ende
+		_Ay = wurz(2)*kmp1(dftspectrum(_y_g-mitte(_y_g),_windowfft))
+		wenn lang?(_peak)>2
+			_py = (kmp2(FrequencyResponse(_peak_g,_y_g-mitte(_y_g),_windowlength,_windowfft,_overlap,2))+180)*inrad; Phasendifferenz zwischen X und Bezugssignal +180 -> Übereinstimmung mit lsq und fourieranalysator da peak nach unten zeigt
+		sonst
+			_py = kmp2(dftspectrum(_y_g-mitte(_y_g),_windowfft))
+		ende
+		_Acx = _Ax*sin(_px);
+		_Asx = _Ax*cos(_px)
+		_Acy = _Ay*sin(_py)
+		_Asy = _Ay*cos(_py)
+	
+		; Gleich und Gegenlaufanteile
+		wenn  _Fall = 1 ; (x vor y -> x = Realachse, y = Imaginärachse)
+			_rf = 1/2*kompl(_Acx+_Asy,_Acy-_Asx);   Gleichlaufanteil als komplexe Zahl über die Drehfrequenz
+			_rb = 1/2*kompl(_Acx-_Asy,_Acy+_Asx);   gegenlaufanteil als komplexe Zahl über die Drehfrequenz
+		sonst; (y vor x -> x = Imaginärachse, y = Realachse)
+			_rf = 1/2*kompl(_Acy+_Asx,_Acx-_Asy);   Gleichlaufanteil als komplexe Zahl über die Drehfrequenz
+			_rb = 1/2*kompl(_Acy-_Asx,_Acx+_Asy);   gegenlaufanteil als komplexe Zahl über die Drehfrequenz
+		end
+		_rf_polar = pol(_rf); Polardarstellung des Gleichlaufanteils
+		_rb_polar = pol(_rb); Polardarstellung des Gegenlaufanteils
+		_rf_a = Kmp1(_rf_polar); Amplitude Gleichlauf
+		_rb_a = Kmp1(_rb_polar); Amplitude Gegenlauf
+		_rf_p = Kmp2(_rf_polar); Phase Gleichlauf
+		_rb_p = Kmp2(_rb_polar); Phase Gegenlauf
+	
+		; Orbitsform, Radien und Winkel
+		_G = _rf_a + _rb_a;	Grosse Halbachse, entspricht Smax
+		_K = _rf_a - _rb_a;	kleine Halbachse, entspricht Smin
+		_FRI = _K/_G;  Form, Indikator Index Orbit 
+		_phimax = 1/2*(_rf_p+_rb_p); Hauptachseneigung bzgl. Realteil-achse (X oder Y-Richtung)
+		_Orbitindikator = abs(pi*_G*_K); Orbitfläche
+	
+		; Zweiseitiges Fourierspektrum
+		_df = xdel?(_rf_a); Frequenzlinineabstand
+		_ff = rampe(0,_df,lang?(_rf_a)); Positive Frequenzlinien
+		_fb = -1*rampe(0,_df,lang?(_rb_a)); Negative Frequenzlinien
+		_ASp_f = xy(_ff,_rf_a); Amplitudenwerte Positiver Frequenzlinien
+	
+		_ASp_b = xy(_fb,_rb_a); Amplitudenwerte Negativer Frequenzlinien
+		_Basp = binde(grenindex(_ASp_b,1,lang?(_ASp_b)-1),grenindex(_ASp_f,1,lang?(_ASp_f))); Zwei-Seitiges-Amplitudenspektrum
+	
+		_PSp_f = xy(_ff,_rf_p); Phasenwerte Positiver Frequenzlinien
+		_PSp_b = xy(_fb,_rb_p); Phasenwerte Negativer Frequenzlinien
+		_Bpsp = binde(grenindex(_PSp_b,1,lang?(_PSp_b)-1),grenindex(_PSp_f,1,lang?(_PSp_f))); Zwei-Seitiges-Phasenspektrum
+	
+
+		_G_kask = binde(_G_kask,_G)
+		_K_kask = binde(_K_kask,_K)
+		_FRI_kask = binde(_FRI_kask,_FRI)
+		_phimax_kask = binde(_phimax_kask,_phimax)
+		_Basp_kask = binde(_Basp_kask,_Basp)
+		_Bpsp_kask = binde(_Bpsp_kask,_Bpsp)
+		_Orbitindikator_kask = binde(_Orbitindikator_kask,_Orbitindikator)
+	
+		seteinheit(_G_kask,_delme_signalx,1)
+		seteinheit(_K_kask,_delme_signalx,1)
+		seteinheit(_Basp_kask,_delme_signalx,1)
+	ende
+	
+	_nn = _nn + 1
+	;sleep(2)
+ENDE
+
+entf delme_*
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Segmentierung der Feature zur Matrixbildung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+SetSegLang(_G_kask,lang?(_G))
+SetSegLang(_K_kask,lang?(_K))
+SetSegLang(_FRI_kask,lang?(_FRI))
+SetSegLang(_phimax_kask,lang?(_phimax))
+SetSegLang(_Basp_kask,lang?(_Basp))
+SetSegLang(_Bpsp_kask,lang?(_Bpsp))
+SetSegLang(_Orbitindikator_kask,lang?(_Orbitindikator))
+
+SetZdel(_drehzahl_kask,_T_fenster)
+SetZdel(_G_kask,_T_fenster)
+SetZdel(_K_kask,_T_fenster)
+SetZdel(_FRI_kask,_T_fenster)
+SetZdel(_phimax_kask,_T_fenster)
+SetZdel(_Basp_kask,_T_fenster)
+SetZdel(_Bpsp_kask,_T_fenster)
+SetZdel(_Orbitindikator_kask,_T_fenster)
+
+wenn 1
+	; Gruppierung der Feature zur Trendbildung
+	Feature:G = _G_kask; Grossradiusspektrum
+	Feature:K = _K_kask; Kleinradiusspektrum
+	Feature:FRI = _FRI_kask; Form-Indikatorspektrum
+	Feature:phimax = _phimax_kask; Grossradius-Winkelspektrum
+	Feature:Basp = _Basp_kask; Amplitude des Zwei-Seitige-Spektrums
+	Feature:Bpsp = _Bpsp_kask; Phase des Zwei-Seitige-Spektrums
+	Feature:Orbitindikator = _Orbitindikator_kask
+	
+	Setting:Zeitfensterbreite = _T_fenster
+	Setting:overlap = _overlap
+	Setting:Gesamtfenster = _Tgesamt
+	Setting:Iterationen = _anzahl_it_mit_overlap
+	Feature:Tmittel = _Tmittel_kask
+	wenn lang?(_peak)>2
+		Feature:drehzahl = _drehzahl_kask
+	ende
+	Feature:x0 = _x0_kask
+	Feature:y0 = _y0_kask
+	Feature:S0 = _S0_kask
+	Feature:phi0 = _phi0_kask	
+	
+	Feature:xm = _xm_kask
+	Feature:ym = _ym_kask
+	Feature:Sm = _Sm_kask
+	Feature:phim = _phim_kask	
+	
+	Feature:Sgmax = _Sgmax_kask
+	Feature:Phigmax = _phigmax_kask
+	
+	;entf _*
+ende

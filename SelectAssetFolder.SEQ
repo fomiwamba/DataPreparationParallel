@@ -1,0 +1,22 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Input: Selected AssetFolder
+; Output: AssetFolderSelected.txt
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;AssetFolderIdx = DlgGetSelectedItem("AssetFolderList")
+;AssetFolder = DlgGetItemText("AssetFolderList",AssetFolderIdx)
+;
+;OpModeIdx = DlgGetSelectedItem("OpMode")
+;OpMode = DlgGetItemText("OpMode",OpModeIdx)
+
+sequenz imc_logging "select_asset_folder started"
+
+AssetFolderIdx = PnGetSelectedItem("AssetFolderList")
+AssetFolder = PnGetItemText("AssetFolderList",AssetFolderIdx)
+
+if varexist?("AssetFolder")
+	;zeigen AssetFolder
+	sequenz LoadConfigAndDataSelectedAssetFolder
+	
+sonst
+	BoxNachricht("Info","Select another AssetFolder!","?1")
+ende

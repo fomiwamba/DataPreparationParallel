@@ -1,0 +1,73 @@
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Sequenz zur Berechung eines Hüllkurvensignals
+; Band pass  or high pass filter to remove the dominating frequencies
+; rectification using abs function to create the envelope function
+; low pass filter to remove high frequency in the envelope function 
+;see chapter 10 / rolling element bearings analysis of Mobius Cat III
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+sequenz imc_logging "huellkurven_berechnung started"
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Inputs
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_sig = PA1
+_BPFu = PA2;	-> Bandpass-Unterfrequenz -->1
+_BPFo = PA3;	-> Bandpass-Oberfrequenz-->2Khz
+_TPF = PA4; 	-> Tiefpassfrequenz-->200Hz
+_Fall = PA5;	-> Variante
+_periode = 1/_TPF
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Variante 1 von imc-FAmos
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+wenn _Fall = 1
+	Feature:env_sig = Envelope1(_sig,_periode,4,0)
+ende
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Variante 2 <=> Gleichrichtung
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+wenn _Fall = 2
+	;Feature:env_sig = FiltTP(abs(FiltBP(_sig,0,0,8,_BPFu,_BPFo)),0,0,8,_TPF)
+	_sig1 = FiltBP(_sig,0,0,8,_BPFu,_BPFo)
+	_sig2 = abs(_sig1)
+	_sig3 = FiltTP(_sig2,0,0,8,_TPF)
+	Feature:env_sig = _sig3
+ende
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Variante 3 <=> Hilbert-Transformation
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+wenn _Fall = 3
+	; x_dach = H(x(t)) = 1/pi*x(t)*1/t  = 1/pi*X(OM)*1/OM
+	; y = abs(x(t)+j*H(x(t)))
+	; env_hilbert = tpf (y)
+	
+	_x1 = tast2(_sig1); vor Verwendung der FFT-Funktion -> Tast2 benutzen
+	_x2 = fft(_x1)
+	_x31 = kmp1(_x2)
+	_x32 = kmp2(_x2)
+	_x3 = kompl(kmp1(_x2),kmp2(_x2)-90); kmp1 -> Betrag, kmp2 -> Phase, kompl -> Komplexe Darstellung
+	; Phasendrehung um -90 Grad für pos. Frequenzen und +90 Grad für neg. Frequenzen -> -jsign(f)
+	_x4 = ifft(_x3); -> Hilbert-Transformation
+	_x5 = kmp1(pol(kompl(_x1,_x4))); -> abs(x(t)+j*H(x(t))) 
+	_x6 = FiltTP(_x5,0,0,8,_TPF)
+	Feature:env_sig = _x6
+	
+ende 
+
+wenn 0
+_sig = Ch010
+_BPFu = 100
+_BPFo = 5000
+_TPF = 5000
+_sig1 = FiltBP(_sig,0,0,8,_BPFu,_BPFo)
+_sig2 = abs(_sig1)
+_sig3 = FiltTP(_sig2,0,0,8,_TPF)
+
+_sig_fft1 = dftspectrum(_sig,2)
+_sig_fft2 = dftspectrum(_sig3,2)
+
+
+a = xdel({BIG BLUE000(HI)},1/12800)
+
+ende

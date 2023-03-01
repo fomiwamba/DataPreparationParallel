@@ -1,0 +1,421 @@
+
+; Input1: Liste der Messungen im AssetFolder\Input
+; Task: Analyse und Extraktion von Features aus der Messungen, nach der Konfigurationsdatei im AssetFolder (xlsconfig)
+; Output: Extrahierte Features aus der Messungen im AssetFolder\Output
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+sequenz imc_logging "process_all_files started"
+
+if 0; run python scripts from imc famos
+	python_path = "c:\python39"
+	python_script = "c:\bda\ai\imc_famos_test.py"
+	input_vars = "12 3"
+	output_var1 = "result1"
+	output_var2 = "result2"
+	output_var3 = "result3"
+	output_var4 = "result4"
+
+	PyInit(python_path)
+	PyRunFile(python_script, input_vars)
+	erg1 = PyGetVar("",output_var1) 
+	erg2 = PyGetVar("",output_var2) 
+	erg3 = PyGetVar("",output_var3) 
+	erg4 = PyGetVar("",output_var4) 
+	PyTerminate()
+end
+
+
+file_monitoring = 0; 1->basic feature extraction, 0-> deeper feature extraction
+standard = 1 ; standard data analysis
+SonderMessung = 0; sonder messung data analysis
+sues = 0; ald, frf_mag,ph,coh to be calculated
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%FromXLS_Config%%%%%%%%%%%%%%%%%%%%%%%%%%
+tsleep = 10
+t_red_factor = 1
+CreateCSVFromEvent = 0 ; data export
+
+sequenz search_item Asset_Props:Name "ExportEventDataAsCsv"
+if search_index <>0
+	CreateCSVFromEvent = tzuew (Asset_Props:Val[search_index],"a")
+ende
+
+sequenz search_item Asset_Props:Name "CalculateSuesFunctions"
+if search_index <>0
+	sues = tzuew (Asset_Props:Val[search_index],"a")
+ende
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+; Filer files to analyze -> to be updated, pb with files not according to dirom_tdms, e.g. siplug
+if 0
+	sequenz FilterFilesToAnalyze; -> mm_max, IstFileList
+ende
+
+; Create List of already analyzed DatFiles
+; input_measurement_file = filename (LoadMeasurementFile -> d7d, tdms, ,...
+_txt = "Date_Time" +"-->"+"MeasFile"
+FileNameList_file = output_verz +"\"+"FileNameList_FeatureExtraction.txt"; 
+_fh = FileOpenASCII(FileNameList_file,2)
+_err = FileLineWrite(_fh,_txt,0)
+_err = FileClose(_fh)
+
+_mm = 1
+_mm_max = txArrayGetSize(IstFileList)
+PnSetText("Files",tform(_mm_max,""))
+SOLANGE _mm <= _mm_max ; for each raw measurement file
+
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;# Init / Open DatFile and Load Data
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if 1
+		file_ratio = floor(_mm/_mm_max*100) 
+		seteinheit(file_ratio,"%",1)
+		zeigen file_ratio
+		
+		PnDeleteItem("Channellist", 0)
+		filename = IstFileList[_mm]
+		filename_short = FsSplitPath(filename,2)
+		PnSetText("File",filename_short)
+		;PnSetText("FileNo",tform(_mm,""))
+
+		;%%%%%%%%%%%%%%
+		; LOAD FILE
+		;%%%%%%%%%%%%%%
+		sequenz LoadMeasurementFile
+		zeigen filename
+		; input: filename
+		; output: outputs: Data, Date_string, OP_Data, Feature
+		Data_Channel = Data
+		_anzKan_file = GrKanalZahl?(Data_Channel) 		;_anzKan = TxArrayGetSize(Ch_Config:SigName)
+		Date_ist = Date_string
+		entf Data
+				
+		_anzKan_config = txarrayGetSize( Ch_Config:SigName)
+		wenn _anzKan_file > _anzKan_config
+			;_erg = boxnachricht("Info","Configuration Error: Some channels are not configured","!1")
+			;_anzKan = max(binde(_anzKan_file,_anzKan_config))
+			config_txt = tform(_anzKan_file,"f1.0") + " vs " + tform(_anzKan_config,"f1.0")
+			zeigen config_txt
+		ende
+		_anzKan = _anzKan_file
+		PnSetText("FileNo",tform(_mm,"f1.0"))
+		PnSetText("Chs",tform(_anzKan,"f1.0")) 
+		
+		if CreateCSVFromEvent > 0
+			rawData = GrNeu()
+			avgfftData = GrNeu()
+			stftData = GrNeu()
+			parData = GrNeu()
+		end
+	end
+	
+	channel_max = 8
+	if _anzKan > channel_max; 
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		;# Parallel processing
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		count = _anzKan
+		chunksize = Floor(count/channel_max)
+		BEGIN_PARALLEL
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1, chunksize)
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+ chunksize, chunksize);
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+2*chunksize, chunksize);
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+3*chunksize, chunksize);
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+4*chunksize, chunksize)
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+5*chunksize, chunksize);
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+6*chunksize, chunksize);
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+7*chunksize, count-7*chunksize);
+			!ElectricalSignatureAnalysis( AssetFolder, Data_Channel, Ch_Config, Asset_Props)
+		END_PARALLEL
+	else
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		;# Sequential processing
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		_kk = 1
+		SOLANGE _kk <= _anzKan ;Asset_Config:anzKanal
+			channel_ratio = round(_kk/_anzKan*100,1) 
+			seteinheit(channel_ratio,"%",1)
+			zeigen channel_ratio
+		
+			PnDeleteItem("Featurelist", 0)
+			Feature = Grneu() ;check this
+			
+			step_ = "Process Channel " + tform(_kk,"")
+			PnSetText("Step",step_)
+			zeigen step_
+		
+			_VarName = GrKanalName?(Data_Channel,_kk);		
+
+			sequenz search_item Ch_Config:SigName _VarName; search_index -> search the configuration of the current channel in the xlsconfig file
+			wenn search_index > 0
+				_kkk = search_index
+				channelXName = _varname
+				zeigen channelXName
+				Feature:ChannelX = Data_Channel:[_kk]   ;Feature:ChannelX =Data_Channel:{<_VarName>}	
+				channelunit = unit?(Data_Channel:[_kk], 1)
+				PnSetText("Channel",channelXName)
+				PnSetText("Unit",channelunit)
+				PnSetText("ChNo",tform(_kk,"f1.0"))
+				sequenz ReadConfiguration
+				sequenz ShowCurrentChannel	
+
+				;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+				;# Load Channel Data and Configuration for Analysis
+				;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+				ViSA_Parameter_Trend = Grneu();
+				ViSA_Data = Grneu();
+				ViSA_Matrix = Grneu();
+
+				Feature:ChannelX = Data_Channel:[_kk];Feature:ChannelX =Data_Channel:{<_VarName>}	
+				_min_sig = min(Data_Channel:[_kk])
+				_max_sig = max(Data_Channel:[_kk])
+				_len_sig = lang?(Data_Channel:[_kk])
+				_tlen_sig = xdel?(Data_Channel:[_kk])*lang?(Data_Channel:[_kk])
+			
+				sequenz search_item Ch_Config:SigName _VarName; search_index -> search the configuration of the current channel in the xlsconfig file
+				_tlen_soll = tzuew(Ch_Config:Windowlength[search_index],"a")
+			
+				wenn _min_sig < _max_sig and _tlen_sig >= _tlen_soll; signal ist nicht konstant und Laenge vom Signal goesser Windowlength
+				
+					; Identify T0 (Trigger Time)
+					DateTime_Wert = Zeit?(Data_Channel:[1]); + xoff?(Data_Channel:[1]); sonst gibt es probleme bei nichtzeitsynchronisierten Signalen
+					; siehe in TransformToDat -> _Messdatum = ZeitInText((Zeit?(Data:[1]) + xoff?(Data:[1])),3) -> dewesoft multifiles (sondermessung)
+					
+					;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+					; Start Channel Specific Data Analysis
+					;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%			
+					wenn _kk = Tachochannel or txwo(ChannelXName,TachoChannelNameIst) <> 0; wenn channelname = channelpuls
+						sequenz SpeedAnalysis 1 ; 
+					else
+						sequenz VibrationSignatureAnalysis_TD 1;-> mv, min, max, peak, peak2peak, crest, kurtosis, histo_area, eff_a(all,lf,iso,hf), eff_v(all,lf,iso,hf)
+						sequenz VibrationSignatureAnalysis_FD 1
+					end
+					
+					;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+					; Datenspeicherung -> Store results
+					;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+					step_ = "Feature storage"
+					PnSetText("Step",step_)	
+				
+					Date_ist = Date_string ; siehe sequenz filename2filedate, file_date_time -> trigger time of the channel/measurement
+					sequenz store_diagnostic_features
+				
+					;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+					;# Collect Data for Barnwood
+					;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+					wenn  CreateCSVFromEvent = 1; 
+						step_ = "Collect CSV Export Data"
+						PnSetText("Step",step_)		
+						sequenz collect_event_data_for_export
+					ende
+
+					entf Feature
+					entf ViSA_Matrix
+					entf ViSA_Parameter_Trend 
+					entf ViSA_Data 
+					;entf Date_ist
+					wenn _ind_channelPuls <> "None"
+						PnDeleteItem("ChannelPuls",1)
+					ende
+				sonst
+					_err = "signal ist zu kurz und/oder constant"
+					zeigen _err
+					_file = AssetFolder +"\"+"constant_short_channels.txt"; 
+					_txt = Date_ist + ": " +filename + " ---> " + _VarName
+					_fh1 = FileOpenASCII(_file,2)
+					_err = FileLineWrite(_fh1,_txt,0)
+					_err = FileClose(_fh1)
+				ende
+
+			else
+				_file = AssetFolder +"\"+"non_configured_channels.txt";
+				_txt = Date_ist + ": " + filename + " ---> " + _VarName
+				_fh1 = FileOpenASCII(_file,2)
+				_err = FileLineWrite(_fh1,_txt,0)
+				_err = FileClose(_fh1)
+			ende
+			_kk = _kk + 1
+		ENDE
+
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		; #Electrical Signature Analysis
+		;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		step_ = "Electrical Signature Analysis"
+		PnSetText("Step",step_)	
+		output_verz_esa = output_verz; + "\ESA\"
+		_status = FsCreateDirectory(output_verz_esa)
+		wenn _status <>0
+			_error = FsGetLastError()
+		ende
+		sequenz ElectricalSignatureAnalysis; -> ESA_Parameter_Trend
+	end
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;# Store Data for Barnwood
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		wenn CreateCSVFromEvent = 1; 
+			step_ = "Feature Export to 3rd Party 'System"
+			PnSetText("Step",step_)	
+			sequenz store_event_data_for_export
+		ende
+			
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; Start Python for Data Preparation for InfluxDB		
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	sleep(1)
+	inputfile = output_verz + "\current_file_dt.txt"
+	_fh = FileOpenASCII(inputfile,1)
+	_err = FileLineWrite(_fh,Date_ist,0)
+	_err = FileClose(_fh)
+	
+	inputfile_list = output_verz + "\list_current_file_dt.txt"
+	_fh = FileOpenASCII(inputfile_list,2)
+	_err = FileLineWrite(_fh,Date_ist,0)
+	_err = FileClose(_fh)
+	
+	step_ = "PrepareData2InfluxDB"
+	PnSetText("Step",step_)	
+	sequenz imc_logging "cadis_prepare_data_to_influxdb started"
+	
+	OpMode = "Manual"
+	path_assetfolder_selected = "C:\BDA\AssetFolderSelected.txt"
+	_fh = FileOpenASCII(path_assetfolder_selected,1)
+	if _fh > 0
+		_err = FileLineWrite(_fh,AssetFolder,0)
+		_err = FileLineWrite(_fh,OpMode,0)
+		_err = FileClose(_fh)
+	sonst
+		_err = FileErrCode?() 
+		zeigen _err
+	ende
+	if 1
+		ret = Execute( "C:\BDA\AI\Start_PrepareData2InfluxDB.bat","" , "", 2,0)
+		wenn ret < 0
+			_erg = boxNachricht("Info","Problem with InfluxDB data preparation","!1")
+		ende
+		sleep(1)
+	else; run python scripts from imc famos
+		python_path = "c:\python39"
+		python_script = "C:\BDA\AI\CADIS_PrepareData2InfluxDB.py"
+		input_vars = AssetFolder
+		PyInit(python_path)
+		PyRunFile(python_script, input_vars); funktioniert nicht wegen eigener importierte Python Modules
+		PyTerminate()
+	end
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;Move InputFile (*.tdms, *.d7d, ...) to output
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%		
+
+	_outfolder = Raw_verz + "\"; +"\" + _jjjj +"\" + _mm +"\" + _dd +"\"; neu 20190319
+	_status = FsCreateDirectory(_outfolder)
+	wenn _status <>0
+		_error = FsGetLastError()
+	ende
+	_outfile = _outfolder + FsSplitPath(input_measurement_file,4)
+	_erg = FsMoveFile(input_measurement_file,_outfile,2,0)
+		
+	; move tdms_index
+	_infile1 = input_measurement_file + "_index"
+	_res = fsfileExists(_infile1)
+	if _res = 1
+		_outfile1 = _outfolder + FsSplitPath(input_measurement_file,4) + "_index"
+		_erg = FsMoveFile(_infile1,_outfile1,2,0)
+	ende
+		
+	; delete from FileList
+	input_measurement_file_ = FsSplitPath(input_measurement_file,4)
+	_idx = PnFindItem("FileList",input_measurement_file_); neu 201903198
+	if _idx > 0
+		PnDeleteItem("FileList",_idx); neu 201903198
+	end
+
+	
+	_mm = _mm + 1
+	;zeigen _mm
+ENDE
+
+cwselectmode("variable")
+cwselectwindow(file_ratio)
+CwAction("win.close")
+
+cwselectmode("variable")
+cwselectwindow(channel_ratio)
+CwAction("win.close")
+
+cwselectmode("variable")
+cwselectwindow(filename)
+CwAction("win.close")
+
+if 0; wird von PrepareDataToInflux gestartet
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; Start Python for Data Import to InfluxDB
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+	output_folder = AssetFolder + "\Output\"
+	_cntfile = 1
+	while _cntfile > 0
+		_filelist_mm = FsFileListNew(output_folder, "*.csv", 0, 0, 2)
+		_cntfile = FsFileListGetCount(_filelist_mm)
+		FsFileListClose(_filelist_mm)
+	ende
+
+	step_ = "ImportData2InfluxDB"
+	PnSetText("Step",step_)	
+	sequenz imc_logging "cadis_import_data_to_influx_db started"
+
+	OpMode = "Manual"
+	path_assetfolder_selected = "C:\BDA\AssetFolderSelected.txt"
+	_fh = FileOpenASCII(path_assetfolder_selected,1)
+	if _fh > 0
+		_err = FileLineWrite(_fh,AssetFolder,0)
+		_err = FileLineWrite(_fh,OpMode,0)
+		_err = FileClose(_fh)
+	sonst
+		_err = FileErrCode?() 
+		zeigen _err
+	ende
+
+	if 1
+		ret = Execute( "C:\BDA\AI\Start_ImportData2InfluxDB.bat","" , "", 2,-1)
+	else; run python scripts from imc famos
+		python_path = "c:\python39"
+		python_script = "C:\BDA\AI\Start_ImportData2InfluxDB.py"
+		input_vars = AssetFolder
+		PyInit(python_path)
+		PyRunFile(python_script, input_vars)
+		PyTerminate()
+	end
+
+	_file = "C:\BDA\Cadis_ImportData2Influxdb.txt"
+	Cadis_ImportData2Influxdb = fsfileexists(_file)
+	if Cadis_ImportData2Influxdb = 1
+		step_ = "Data Preparation Completed"
+	else
+		_erg = boxnachricht("Error","Import Data To InfluxDB!","S1")
+		step_ = "Data Preparation not Completed"
+	end
+	PnSetText("Step",step_)	
+end
+
+DbClosePanel(0)
+
+;DlgCloseDialog(0)
+
+;entf _*
+;if OpMode = "Auto_All"
+;	DlgCloseDialog(0)
+;	;Dialog( "C:\BDA\DataExploration\DataExploration.dlg", "", 0)
+;ende
+;if OpMode = "Manually"
+;	DlgCloseDialog(0)
+;	;Dialog( "C:\BDA\DataExploration\DataExploration.dlg", "", 0)
+;else
+;	DlgCloseDialog(0)
+;ende
+
+
+
+
+

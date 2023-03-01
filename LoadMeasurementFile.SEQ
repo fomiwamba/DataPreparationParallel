@@ -1,0 +1,137 @@
+;%%%%%%%%%%%%%%
+; LOAD FILE
+;%%%%%%%%%%%%%%
+; input: filename
+; output: outputs: Data, date_time_str, OP_Data, Feature, Data_Channel
+
+
+sequenz imc_logging "load_measurement_files started"
+
+input_measurement_file = filename
+Data = Grneu()
+OP_Data = Grneu()
+step_ = "Load Measurement File"
+PnSetText("Step",step_)	
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; protocol, that file selected is done correctly!
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+_txt = ZeitinText(ZeitSystem?(),3) +": " + input_measurement_file   + "-->" + filename
+_fh1 = FileOpenASCII(FileNameList_file,2)
+_err = FileLineWrite(_fh1,_txt,0)
+_err = FileClose(_fh1)
+
+if tdms_files
+	sequenz LoadTmsFile_1
+	; input: filename
+	; outputs: Data, date_time_str, OP_Data
+ende
+if d7d_files
+	sequenz Loadd7dfile
+	; input: filename
+	; outputs: Data, date_time_str, OP_Data
+ende
+if dat_files
+	sequenz Loaddatfile
+	; input: filename
+	; outputs: Data, date_time_str, OP_Data
+ende
+if txt_files
+	;sequenz Loadtxtfile
+	; input: filename
+	; outputs: Data, date_time_str, OP_Data
+ende
+if csv_files
+	;sequenz LoadTmsFile_1
+	; input: filename
+	; outputs: Data, date_time_str, OP_Data
+ende
+
+MeasDate = ZeitInText((Zeit?(Data:[1]) + xoff?(Data:[1])),3)
+sequenz date_to_string ; MeasDate -> Date_string
+		
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Store OPData to Static_Parameters_date_time.csv file 
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+step_ = "Store Static Data"
+PnSetText("Step",step_)	
+if GrKanalZahl?(OP_Data) > 0
+	sicherungsfolder = AssetFolder + "\Output\"
+	op_file ="Static_Parameters_"+Date_string
+	sicherungsfile_csv = sicherungsfolder + op_file + ".csv";
+	sequenz store_csv_parameter_file ; sicherungsfile_csv, OP_Data
+
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; protocol, that file loading is done correctly!
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	_txt = ZeitinText(ZeitSystem?(),3) +": " + input_measurement_file   + "-->" + sicherungsfile_csv
+	_fh1 = FileOpenASCII(FileNameList_file,2)
+	_err = FileLineWrite(_fh1,_txt,0)
+	_err = FileClose(_fh1)
+ende
+		
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Store VibData to *.dat File
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+step_ = "Store *.dat file"
+PnSetText("Step",step_)			
+if GrKanalZahl?(Data) > 0
+	sicherungsfolder = Out_verz + "\"	; +"\" + _jjjj +"\" + _mm +"\" + _dd +"\"; neu 20190319
+	_status = FsCreateDirectory(sicherungsfolder)
+	wenn _status <>0
+		_error = FsGetLastError()
+	ende
+	file = FsSplitPath(filename,2)
+	if tdms_files = 1
+		vib_file = tteil(file,1,tlang(file)-15)+Date_string	;+".dat" bei tdms files -> yyyymmdd_hhmnss
+	elseif d7d_files = 1
+		vib_file = tteil(file,1,tlang(file)-17)+Date_string	;+".dat" bei dewe files -> yyyy_mm_dd_hhmnss
+	else tdms_files = 1
+		vib_file = tteil(file,1,tlang(file)-15)+Date_string	;+".dat" bei tdms files -> yyyymmdd_hhmnssende
+	ende
+
+	sicherungsfile_dat = sicherungsfolder + vib_file + ".dat";
+	sequenz store_dat_file
+	
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	;Move InputFile (*.tdms, *.d7d, ...) to output
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%		
+	;	if 0
+	;		input_measurement_file = filename
+	;		_outfolder = Raw_verz + "\"; +"\" + _jjjj +"\" + _mm +"\" + _dd +"\"; neu 20190319
+	;		_status = FsCreateDirectory(_outfolder)
+	;		wenn _status <>0
+	;			_error = FsGetLastError()
+	;		ende
+	;		_outfile = _outfolder + FsSplitPath(input_measurement_file,4)
+	;		_erg = FsMoveFile(input_measurement_file,_outfile,2,0)
+	;		
+	;		; move tdms_index
+	;		_index_file = input_measurement_file + "_index"
+	;		_res = fsfileExists(_index_file)
+	;		if _res = 1
+	;			_outfile_index = _outfolder + FsSplitPath(input_measurement_file,2) + ".tdms_index"
+	;			_erg = FsMoveFile(_index_file,_outfile_index,2,0)
+	;		ende
+	;	ende
+
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; store channel name, unit, sampling frequency in channelliste
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	step_ = "Export Channel List"
+	PnSetText("Step",step_)		
+	sequenz export_channel_list
+		
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	; protocol, that file loading is done correctly!
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	_txt = ZeitinText(ZeitSystem?(),3) +": " + input_measurement_file   + "-->" + sicherungsfile_dat
+	_fh1 = FileOpenASCII(FileNameList_file,2)
+	_err = FileLineWrite(_fh1,_txt,0)
+	_err = FileClose(_fh1)
+	
+	
+ende
+; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Data Loading done!
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

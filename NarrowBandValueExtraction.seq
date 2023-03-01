@@ -1,0 +1,7 @@
+; input: speci, freqi
+; output: freqi_soll, Ampi
+sequenz imc_logging "narrow_band_value_extraction started"
+speci = PA1; I1_sig_spec
+freqi = PA2; freqline-ppf
+freqi_soll = posi(speci ,max(gren(speci,freqi-1*deltaf,freqi+1*deltaf)))
+Ampi = wert(speci,freqi_soll)

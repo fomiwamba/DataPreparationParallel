@@ -1,0 +1,131 @@
+
+sequenz imc_logging "store_diagnostic_features started"
+
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Store diagnostic parameters
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+output_verz = AssetFolder + "\Output"
+numb_par = grkanalZahl?(ViSA_Parameter_Trend)
+wenn numb_par > 0
+	sicherungsfile_csv = output_verz +"\"+ChannelXName+"_Parameter_"+Date_ist+".csv"; 
+	_fileid = FileOpenAscii2(sicherungsfile_csv, "Parameter_TimeSeries",1)
+	_err = FileObjWrite(_fileid,ViSA_Parameter_Trend)
+	_err = FileClose(_fileid)	
+	wenn _err <> 0
+		_error = FileErrCode?()
+		zeigen _error
+	else
+		_text = sicherungsfile_csv + " created!"
+		sequenz imc_logging_file_creation _text
+	ende
+ende
+
+
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; Store diagnostic functions
+;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+numb_fft = grkanalZahl?(ViSA_Matrix)
+wenn numb_fft > 0
+	for _fft = 1 to numb_fft
+		_fftname = grkanalName?(Visa_Matrix,_fft)
+		sicherungsfile_csv = output_verz +"\"+_fftname+"_"+Date_ist+".csv";
+		_fft_values = ViSA_Matrix:[_fft]
+		if txwo(_fftname,"_hist") <> 0
+			_fileid = FileOpenAscii2(sicherungsfile_csv, "Hist_TimeSeries",1)
+		else
+			_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+		end
+		_err = FileObjWrite(_fileid,_fft_values)
+		_err = FileClose(_fileid)		
+		wenn _err <> 0
+			_error = FileErrCode?()
+			zeigen _error
+		else
+			_text = sicherungsfile_csv + " created!"
+			sequenz imc_logging_file_creation _text
+		ende
+		if 0
+			if txwo(_fftname,"fft_mag")
+				ch_stft_mag_ = _fft
+				if varexist?("ch_stft_mag_")
+					ch_stft_mag = ViSA_Matrix:[ch_stft_mag_]
+					_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+					_err = FileObjWrite(_fileid,ch_stft_mag)
+					_err = FileClose(_fileid)		
+					wenn _err <> 0
+						_error = FileErrCode?()
+						zeigen _error
+					ende
+				ende
+			elseif txwo(_fftname,"fft_ph")
+				ch_stft_ph_ = _fft
+				if varexist?("ch_stft_ph_")
+					ch_stft_ph = ViSA_Matrix:[ch_stft_ph_]
+					_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+					_err = FileObjWrite(_fileid,ch_stft_ph)
+					_err = FileClose(_fileid)		
+					wenn _err <> 0
+						_error = FileErrCode?()
+						zeigen _error
+					ende	
+				ende
+			elseif txwo(_fftname,"PSD")
+				ch_psd_ = _fft
+				if varexist?("ch_psd_")
+					ch_psd = ViSA_Matrix:[ch_psd_]
+					; for special measurement -> stft, psd, frf_mag, frf_ph, frf_coh
+					_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+					_err = FileObjWrite(_fileid,ch_psd)
+					_err = FileClose(_fileid)		
+					wenn _err <> 0
+						_error = FileErrCode?()
+						zeigen _error
+					ende	
+				ende
+			elseif txwo(_fftname,"FRF_Mag")
+				ch_frf_mag_ = _fft
+				if varexist?("ch_frf_mag_")
+					ch_frf_mag = ViSA_Matrix:[ch_frf_mag_]
+					; for special measurement -> stft, psd, frf_mag, frf_ph, frf_coh
+					_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+					_err = FileObjWrite(_fileid,ch_frf_mag)
+					_err = FileClose(_fileid)		
+					wenn _err <> 0
+						_error = FileErrCode?()
+						zeigen _error
+					ende	
+				ende
+			elseif txwo(_fftname,"FRF_Ph")
+				ch_frf_ph_ = _fft
+				if varexist?("ch_frf_ph_")
+					ch_frf_ph = ViSA_Matrix:[ch_frf_ph_]
+					; for special measurement -> stft, psd, frf_mag, frf_ph, frf_coh
+					_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+					_err = FileObjWrite(_fileid,ch_frf_ph)
+					_err = FileClose(_fileid)		
+					wenn _err <> 0
+						_error = FileErrCode?()
+						zeigen _error
+					ende	
+				ende
+			elseif txwo(_fftname,"FRF_Coh")
+				ch_frf_coh_ = _fft
+				if varexist?("ch_frf_coh_")
+					ch_frf_coh = ViSA_Matrix:[ch_frf_coh_]
+					; for special measurement -> stft, psd, frf_mag, frf_ph, frf_coh
+					_fileid = FileOpenAscii2(sicherungsfile_csv, "FFT_TimeSeries",1)
+					_err = FileObjWrite(_fileid,ch_frf_coh)
+					_err = FileClose(_fileid)		
+					wenn _err <> 0
+						_error = FileErrCode?()
+						zeigen _error
+					ende	
+				ende
+			else
+				ch_stft_mag_ = _fft
+			ende
+		ende
+	ende
+	
+ende

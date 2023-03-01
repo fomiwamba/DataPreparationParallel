@@ -1,0 +1,68 @@
+sequenz imc_logging "load_config_and_data_selected_asset_folder started"
+
+Idx = PnFindItem("AssetFolderList",AssetFolder)
+wenn Idx > 0
+	PnSelectItem("AssetFolderList",Idx)
+
+	init_verz = AssetFolder
+	input_verz = AssetFolder + "\ConditionFiles"
+
+	output_verz = AssetFolder + "\Output"
+	_status = FsCreateDirectory(output_verz)
+	wenn _status <>0
+		_err = FsGetLastError()
+		zeigen _err
+	ende
+
+	Out_verz = AssetFolder + "\Output\TWF"
+	_status = FsCreateDirectory(Out_verz)
+	wenn _status <>0
+		_err = FsGetLastError()
+		zeigen _err
+	ende
+	
+	Raw_verz = AssetFolder + "\TransformedConditionFiles"
+	_status = FsCreateDirectory(Raw_verz)
+	wenn _status <>0
+		_err = FsGetLastError()
+		zeigen _err
+	ende
+
+	;Pnsettext("InputFolder",input_verz)
+	;PnsetText("OutputFolder",output_verz)
+
+	PnDeleteItem("Filelist", 0)
+	PnDeleteItem("Channellist", 0)
+	PnDeleteItem("Featurelist", 0)
+
+	;sequenz ClearPlots
+	CwSelectMode("title")
+	_ret = CwIsWindow("plot1")
+	wenn _ret <> 0
+		CwSelectWindow("plot1")
+		;CwAction("win.close")
+		CwAction("delete.lines")
+		CwAction("delete.markers")
+		CwAction("reset")
+	ende
+
+	; Load AssetConfig
+	path_configfile = AssetFolder + "\xlsconfig.xlsx"
+	_path_configfile_temp = AssetFolder + "\temp10_xlsconfig.xlsx"
+	_erg = FsCopyFile(path_configfile,_path_configfile_temp,2,0)
+	sequenz ReadXlsConfig _path_configfile_temp;
+	_erg =FsDeleteFile(_path_configfile_temp)
+
+	sequenz search_tacho_config
+
+	sequenz LoadFilesFromInputFolder
+
+	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+	_Messdatum_zahl=ZeitBinde(01,01,2010,0,0,0)
+	_aktZeit = Zeitintext(ZeitSystem?()+24*3600,4)
+	PnSetValue("DateFrom",_Messdatum_zahl)
+	_Tomorrow = ZeitSystem?()+24*3600
+	PnSetValue("DateTo",_Tomorrow)
+
+ende

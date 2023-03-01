@@ -1,0 +1,26 @@
+; Search  TachoConfig
+sequenz imc_logging "search_tacho_config started"
+
+
+TachochannelName = "None"
+Tachochannel = -1
+
+sequenz search_item Asset_Props:Name "TachoChannel"
+wenn search_index > 0
+    TachochannelName = Asset_Props:Val[search_index]
+    wenn TachochannelName= "None";search_index > Anz_Channel
+        Tachochannel = -1
+    sonst
+        sequenz search_item Ch_Config:SigName TachochannelName
+        Tachochannel = search_index;tzuew(Tachochannel_Value,"f");
+    ende
+ende
+PnsetText("NameTachoChannel",TachochannelName)
+
+sequenz search_item Asset_Props:Name "RatedSpeed_rpm"
+if search_index = 0
+	sequenz search_item Asset_Props:Name "NameplateRotationSpeed_rpm"
+ende
+RatedSpeed_rpm = Asset_Props:Val[search_index]
+Speed_F0 = tzuew(RatedSpeed_rpm,"f")/60
+PnSetText("F0",tform(Speed_F0,"f4.2"))

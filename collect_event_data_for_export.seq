@@ -1,0 +1,38 @@
+; Raw Data Creation of current signal -> TimeWaveformData_Date_Time.csv
+sequenz imc_logging "collect_event_data_for_export started"
+
+_VarName = GrKanalName?(Data_Channel,_kk); read signal from raw measurement data channels;
+rawData:{<_VarName>} = Data_Channel:[_kk]
+UserPropSet(rawData:{<_VarName>}, "TestNumber", 212, 2, 0) ; ganzzahlig
+SetKomm( rawData:{<_VarName>}, "TestNumber")
+					
+; STFT Data Creation of current signal -> STFTSpectrumData_Date_Time.csv
+_qqqq = 1
+_qqqqmax = GrKanalZahl?(ViSA_Matrix)
+solange _qqqq <= _qqqqmax
+	stftname = GrKanalName?(ViSA_Matrix,_qqqq);
+	stftData:{<stftname>} = ViSA_Matrix:[_qqqq]
+	UserPropSet(stftData:{<stftname>}, "TestNumber", 212, 2, 0) ; ganzzahlig
+	SetKomm( stftData:{<stftname>}, "TestNumber")
+	_qqqq = _qqqq + 1
+ende
+					
+;-> AveragedSpectrumData_Date_Time.csv
+avgfft_idx = GrKanalFinde(Feature,"Ax_averaged")
+wenn avgfft_idx > 0
+	; AvgFFT Data Creation of current signal
+	avgfftData:{<_VarName>} = Feature:Ax_averaged
+	UserPropSet(avgfftData:{<_VarName>}, "TestNumber", 212, 2, 0) ; ganzzahlig
+	SetKomm(avgfftData:{<_VarName>}, "TestNumber")
+ende
+					
+; Parameter Data Set Creation of current signal -> DiagnosticParmeters_Date_Time.csv
+_qqqq = 1
+_qqqqmax = GrKanalZahl?(ViSA_Parameter_Trend)
+solange _qqqq <= _qqqqmax
+	parname = GrKanalName?(ViSA_Parameter_Trend,_qqqq);
+	parData:{<parname >} = ViSA_Parameter_Trend:[_qqqq]
+	UserPropSet(parData:{<parname >}, "TestNumber", 212, 2, 0) ; ganzzahlig
+	SetKomm( parData:{<parname >}, "TestNumber")
+	_qqqq = _qqqq + 1
+ende
