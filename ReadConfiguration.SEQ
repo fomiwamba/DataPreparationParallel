@@ -267,7 +267,7 @@ ende
 ch_psd_par_liste = TxArrayCreate(0)
 ch_frf_par_liste = TxArrayCreate(0)
 ch_fft_par_liste = TxArrayCreate(0)
-<<<<<<< HEAD
+;<<<<<<< HEAD
 if GrChanNum?(VMS_Freq_Table) > 0;  txarraygetsize(VMS_Freq_Table:ParName) > 1
 	fft_count = 0
 	psd_count = 0
@@ -293,7 +293,7 @@ if GrChanNum?(VMS_Freq_Table) > 0;  txarraygetsize(VMS_Freq_Table:ParName) > 1
 			if tverg("psd",vms_pari_kf) = 0 and txarraygetsize(vms_pari_parts) = 2
 				psd_count = psd_count + 1
 				ch_psd_par_liste[psd_count] = vms_par
-=======
+;=======
 if GrChanNum?(VMS_Freq_Table) > 0
 	if txarraygetsize(VMS_Freq_Table:ParName) > 1
 		fft_count = 0
@@ -307,7 +307,7 @@ if GrChanNum?(VMS_Freq_Table) > 0
 				if txwo(vms_pari_parts[3],"@")  <> 0
 					vms_pari_kf@freq = txsplit(vms_pari_parts[3],"@")
 				end
->>>>>>> origin/master
+;>>>>>>> origin/master
 			ende
 			vms_pari_sig = vms_pari_parts[1]
 			vms_pari_kf = vms_pari_kf@freq[1]

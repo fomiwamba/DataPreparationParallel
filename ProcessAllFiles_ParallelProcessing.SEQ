@@ -82,7 +82,7 @@ SOLANGE _mm <= _mm_max ; for each raw measurement file
 		; LOAD FILE
 		;%%%%%%%%%%%%%%
 		sequenz LoadMeasurementFile
-		zeigen filename
+		;zeigen filename
 		; input: filename
 		; output: outputs: Data, Date_string, OP_Data, Feature
 		Data_Channel = Data
@@ -125,6 +125,16 @@ SOLANGE _mm <= _mm_max ; for each raw measurement file
 			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+5*chunksize, chunksize);
 			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+6*chunksize, chunksize);
 			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+7*chunksize, count-7*chunksize);
+			!ElectricalSignatureAnalysis( AssetFolder, Data_Channel, Ch_Config, Asset_Props)
+		END_PARALLEL
+	elseif _anzKan > 3
+		count = _anzKan
+		chunksize = Floor(count/4)
+		BEGIN_PARALLEL
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1, chunksize)
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+ chunksize, chunksize);
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+2*chunksize, chunksize);
+			!ProcessChannel(AssetFolder, Data_Channel, Ch_Config, VMS_Freq_Table, 1+3*chunksize, count-3*chunksize);
 			!ElectricalSignatureAnalysis( AssetFolder, Data_Channel, Ch_Config, Asset_Props)
 		END_PARALLEL
 	else
@@ -254,12 +264,12 @@ SOLANGE _mm <= _mm_max ; for each raw measurement file
 	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	;# Store Data for Barnwood
 	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		wenn CreateCSVFromEvent = 1; 
-			step_ = "Feature Export to 3rd Party 'System"
-			PnSetText("Step",step_)	
-			sequenz store_event_data_for_export
-		ende
-			
+	wenn CreateCSVFromEvent = 1; 
+		step_ = "Feature Export to 3rd Party 'System"
+		PnSetText("Step",step_)	
+		sequenz store_event_data_for_export
+	ende
+
 	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	; Start Python for Data Preparation for InfluxDB		
 	;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -140,11 +140,11 @@ ende
 if file_monitoring = 0 ; ->diagnosis
 	; FRF_Analysis
 	wenn Length > 0 and Window >= 0 and Overlap >= 0 and Average >= 0 and PulsPerRev > 0 and GrChanNum?(VMS_Freq_Table) > 0
-<<<<<<< HEAD
+;<<<<<<< HEAD
 		; txarraygetsize(FRF_ChY_List) > 0 and txarraygetsize(VMS_Freq_Table:ParName) > 1 and txarraygetsize(ch_frf_par_liste) > 0
-=======
+;=======
 		;txarraygetsize(FRF_ChY_List) > 0 and txarraygetsize(VMS_Freq_Table:ParName) > 1 and txarraygetsize(ch_frf_par_liste) > 0
->>>>>>> origin/master
+;>>>>>>> origin/master
 		if PA1 = 1
 			step_ = "frf analysis"
 			PnSetText("Step",step_)

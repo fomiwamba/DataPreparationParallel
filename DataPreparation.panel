@@ -40,7 +40,7 @@
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcStaticComboBoxWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
               <script guid="5051f595-19a5-4a5e-8f00-cc4563504516" fmt="FamosSequence" size="50">cwBlAHEAdQBlAG4AegAgAFMAZQBsAGUAYwB0AEEAcwBzAGUAdABGAG8AbABkAGUAcgA=</script>
-              <text />
+              <text>Ch000</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -49,7 +49,7 @@
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcStaticComboBoxWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
               <script guid="5051f595-19a5-4a5e-8f00-cc4563504516" fmt="FamosSequence" size="50">cwBlAHEAdQBlAG4AegAgAFMAZQBsAGUAYwB0AEEAcwBzAGUAdABGAG8AbABkAGUAcgA=</script>
-              <text />
+              <text>Ch000</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -58,7 +58,7 @@
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcStaticComboBoxWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
               <script guid="5051f595-19a5-4a5e-8f00-cc4563504516" fmt="FamosSequence" size="50">cwBlAHEAdQBlAG4AegAgAFMAZQBsAGUAYwB0AEEAcwBzAGUAdABGAG8AbABkAGUAcgA=</script>
-              <text />
+              <text>Ch000</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -110,11 +110,7 @@
             <pos bounds="159; 3351; 6544; 706" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSimpleButtonWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
-<<<<<<< HEAD
-              <script guid="23440061-eaa9-4ed8-8803-2ded0db23d42" fmt="FamosSequence" size="610">OwBpAGYAIAAwAA0ACgA7AAkAcwBlAHEAdQBlAG4AegAgAFAAcgBvAGMAZQBzAHMAQQBsAGwARgBpAGwAZQBzAA0ACgA7AGUAbABzAGUADQAKADsACQA7AHMAZQBxAHUAZQBuAHoAIABQAHIAbwBjAGUAcwBzAEEAbABsAEYAaQBsAGUAcwBfAFMAaQBwAGwAdQBnAEMADQAKADsACQBzAGUAcQB1AGUAbgB6ACAAUAByAG8AYwBlAHMAcwBBAGwAbABGAGkAbABlAHMAXwBQAGEAcgBhAGwAbABlAGwAUAByAG8AYwBlAHMAcwBpAG4AZwANAAoAOwBlAG4AZAANAAoAOwANAAoAOwBpAGYAIAB0AHgAYQByAHIAYQB5AGcAZQB0AHMAaQB6AGUAKABDAGgAXwBDAG8AbgBmAGkAZwA6AFMAaQBnAE4AYQBtAGUAKQAgAD4AIAA4AA0ACgA7AAkAcwBlAHEAdQBlAG4AegAgAFAAcgBvAGMAZQBzAHMAQQBsAGwARgBpAGwAZQBzAF8AUABhAHIAYQBsAGwAZQBsAFAAcgBvAGMAZQBzAHMAaQBuAGcADQAKADsAZQBsAHMAZQANAAoAOwAJAHMAZQBxAHUAZQBuAHoAIABQAHIAbwBjAGUAcwBzAEEAbABsAEYAaQBsAGUAcwANAAoAOwBlAG4AZAANAAoADQAKAHMAZQBxAHUAZQBuAHoAIABQAHIAbwBjAGUAcwBzAEEAbABsAEYAaQBsAGUAcwBfAFAAYQByAGEAbABsAGUAbABQAHIAbwBjAGUAcwBzAGkAbgBnAA==</script>
-=======
-              <script guid="23440061-eaa9-4ed8-8803-2ded0db23d42" fmt="FamosSequence" size="242">aQBmACAAMQANAAoACQBzAGUAcQB1AGUAbgB6ACAAUAByAG8AYwBlAHMAcwBBAGwAbABGAGkAbABlAHMADQAKAGUAbABzAGUADQAKAAkAOwBzAGUAcQB1AGUAbgB6ACAAUAByAG8AYwBlAHMAcwBBAGwAbABGAGkAbABlAHMAXwBTAGkAcABsAHUAZwBDAA0ACgAJAHMAZQBxAHUAZQBuAHoAIABQAHIAbwBjAGUAcwBzAEEAbABsAEYAaQBsAGUAcwBfAFAAYQByAGEAbABsAGUAbABQAHIAbwBjAGUAcwBzAGkAbgBnAA0ACgBlAG4AZAA=</script>
->>>>>>> origin/master
+              <script guid="23440061-eaa9-4ed8-8803-2ded0db23d42" fmt="FamosSequence" size="242">aQBmACAAMAANAAoACQBzAGUAcQB1AGUAbgB6ACAAUAByAG8AYwBlAHMAcwBBAGwAbABGAGkAbABlAHMADQAKAGUAbABzAGUADQAKAAkAOwBzAGUAcQB1AGUAbgB6ACAAUAByAG8AYwBlAHMAcwBBAGwAbABGAGkAbABlAHMAXwBTAGkAcABsAHUAZwBDAA0ACgAJAHMAZQBxAHUAZQBuAHoAIABQAHIAbwBjAGUAcwBzAEEAbABsAEYAaQBsAGUAcwBfAFAAYQByAGEAbABsAGUAbABQAHIAbwBjAGUAcwBzAGkAbgBnAA0ACgBlAG4AZAA=</script>
               <text>Start Feature Extraction</text>
             </_psn_>
           </_psn_>
@@ -125,11 +121,7 @@
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcDateTimeWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
               <appearance bg_color="" border="7" />
               <behaviour format="G2" calendar="-1" ro="False" />
-<<<<<<< HEAD
-              <value>638129068090000000</value>
-=======
-              <value>638118887680000000</value>
->>>>>>> origin/master
+              <value>638140299910000000</value>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -176,11 +168,7 @@
             <pos bounds="25277; 6791; 4392; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-<<<<<<< HEAD
-              <text>Export Channel List</text>
-=======
-              <text>Load Measurement File</text>
->>>>>>> origin/master
+              <text>Process Channel 1</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -214,7 +202,7 @@
             <pos bounds="21043; 6791; 1588; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-              <text>3</text>
+              <text>1</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -231,7 +219,7 @@
             <pos bounds="19103; 6791; 1588; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-              <text>m/s^2</text>
+              <text>V</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -248,7 +236,7 @@
             <pos bounds="14658; 6791; 4180; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-              <text>Ch002</text>
+              <text>Ch000</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -274,11 +262,7 @@
             <pos bounds="12788; 6791; 1588; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-<<<<<<< HEAD
-              <text>10</text>
-=======
               <text>2</text>
->>>>>>> origin/master
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -368,11 +352,7 @@
             <pos bounds="12188; 5786; 17480; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-<<<<<<< HEAD
-              <text>AMU_192.168.0.1_A_OC1_EventFile_20230221_212422</text>
-=======
-              <text>AMU_10.201.161.151_C_OC3_Partial Load 3_eventfile_20161031_232753</text>
->>>>>>> origin/master
+              <text>AMU_192.168.0.1_O_OC1_EventFile_20230228_000608</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -482,7 +462,7 @@
             <pos bounds="22313; 3598; 1164; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-              <text>ON</text>
+              <text>OFF</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -498,7 +478,7 @@
             <pos bounds="22313; 2540; 1164; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-              <text>ON</text>
+              <text>OFF</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -542,7 +522,7 @@
             <pos bounds="18609; 4132; 1588; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-              <text>13</text>
+              <text>9</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">
@@ -677,7 +657,7 @@
             <pos bounds="15117; 3069; 1588; 459" />
             <style dock="None" />
             <_psn_ type="imc.Common.Controls.ImcPanel.Widgets.CimcSingleLineTextEditWidget" assembly="imc.Common.Controls.ImcPanel" main="0" sub="1">
-              <text>4</text>
+              <text>10</text>
             </_psn_>
           </_psn_>
           <_psn_ type="imc.Common.Controls.ImcPanel.CimcWidgetContainer" assembly="imc.Common.Controls.ImcPanel" main="0" sub="0">

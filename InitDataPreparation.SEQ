@@ -12,7 +12,7 @@ sequenz set_accuracy
 sequenz LoadAssetFolderList
 
 sequenz LoadAssetFolderSelected
-q
+
 if varexist?("AssetFolder")
 	;log_file = AssetFolder + "\" + "imc_log_" + timetotext(timesystem?(),3)+".txt"
 	;log_file_storage = AssetFolder + "\" + "imc_log_file_" + timetotext(timesystem?(),3)+".txt"
@@ -23,17 +23,7 @@ if varexist?("AssetFolder")
 	sequenz LoadConfigAndDataSelectedAssetFolder
 	if varexist?("OpMode")
 		if txwo(OpMode,"Auto") <> 0
-<<<<<<< HEAD
-			if txarraygetsize(Ch_Config:SigName) > 8
-				sequenz ProcessAllFiles_ParallelProcessing
-			else
-				sequenz ProcessAllFiles
-			end
-			
-=======
-			
 			sequenz ProcessAllFiles_ParallelProcessing
->>>>>>> origin/master
 		ende
 	ende
 sonst
